@@ -17,6 +17,7 @@ DATA_DIR.mkdir(parents=True, exist_ok=True)
 
 TICKERS = {
     "TQQQ": "TQQQ",     # 3x leveraged Nasdaq ETF (offensive)
+    "QLD": "QLD",       # 2x leveraged Nasdaq ETF (mid-tier offensive, v2)
     "SPY": "SPY",       # S&P 500 ETF (defensive)
     "QQQ": "QQQ",       # Nasdaq-100 (momentum reference - longer history than TQQQ)
     "VIX": "^VIX",      # CBOE Volatility Index
@@ -61,6 +62,8 @@ def build_master_frame(data: dict[str, pd.DataFrame]) -> pd.DataFrame:
     frame["spy_close"] = data["SPY"]["Close"]
     frame["tqqq_open"] = data["TQQQ"]["Open"].reindex(base)
     frame["tqqq_close"] = data["TQQQ"]["Close"].reindex(base)
+    frame["qld_open"] = data["QLD"]["Open"].reindex(base)
+    frame["qld_close"] = data["QLD"]["Close"].reindex(base)
     frame["qqq_close"] = data["QQQ"]["Close"].reindex(base)
     frame["vix_close"] = data["VIX"]["Close"].reindex(base)
     frame["irx_close"] = data["IRX"]["Close"].reindex(base)     # in percent points
