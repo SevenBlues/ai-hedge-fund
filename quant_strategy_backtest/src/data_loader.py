@@ -26,6 +26,7 @@ TICKERS = {
     "SHY": "SHY",       # 1-3 year Treasury ETF (2y proxy)
     "HYG": "HYG",       # High-yield corp bond ETF (credit risk, v2.2)
     "IEF": "IEF",       # 7-10y Treasury ETF (flight-to-quality, v2.2)
+    "UUP": "UUP",       # USD bullish ETF (DXY proxy, v2.2)
 }
 
 
@@ -73,8 +74,9 @@ def build_master_frame(data: dict[str, pd.DataFrame]) -> pd.DataFrame:
     frame["shy_close"] = data["SHY"]["Close"].reindex(base)
     frame["hyg_close"] = data["HYG"]["Close"].reindex(base)
     frame["ief_close"] = data["IEF"]["Close"].reindex(base)
+    frame["uup_close"] = data["UUP"]["Close"].reindex(base)
     # Forward-fill the macro series for missing publication days (VIX/IRX share NYSE calendar but be safe)
-    macro_cols = ["vix_close", "irx_close", "fvx_close", "shy_close", "hyg_close", "ief_close"]
+    macro_cols = ["vix_close", "irx_close", "fvx_close", "shy_close", "hyg_close", "ief_close", "uup_close"]
     frame[macro_cols] = frame[macro_cols].ffill(limit=3)
     return frame.dropna()
 
