@@ -68,6 +68,9 @@ def build_master_frame(data: dict[str, pd.DataFrame]) -> pd.DataFrame:
     frame["qld_open"] = data["QLD"]["Open"].reindex(base)
     frame["qld_close"] = data["QLD"]["Close"].reindex(base)
     frame["qqq_close"] = data["QQQ"]["Close"].reindex(base)
+    frame["qqq_open"] = data["QQQ"]["Open"].reindex(base)
+    frame["qqq_high"] = data["QQQ"]["High"].reindex(base)
+    frame["qqq_low"] = data["QQQ"]["Low"].reindex(base)
     frame["vix_close"] = data["VIX"]["Close"].reindex(base)
     frame["irx_close"] = data["IRX"]["Close"].reindex(base)     # in percent points
     frame["fvx_close"] = data["FVX"]["Close"].reindex(base)
