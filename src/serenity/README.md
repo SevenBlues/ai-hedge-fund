@@ -57,12 +57,55 @@
 # 终端打印筛选池 + 供应链图 + 需求模型，并生成可视化 PNG 和 JSON
 python -m src.serenity.run_screen --png out/report.png --json out/scores.json
 
+# 活数据版：从 Yahoo Finance 刷新市值/机构持股/分析师数/做空比例/EV-Sales
+python -m src.serenity.run_screen --live --adversarial --survivors-only
+
+# 真·多模型对抗验证（需配置 OPENAI/ANTHROPIC/GOOGLE API key）
+python -m src.serenity.run_screen --adversarial --llm
+
 # 按不同维度排序
 python -m src.serenity.run_screen --top 10 --sort odds_ratio
-python -m src.serenity.run_screen --sort chokepoint_score
 ```
 
-依赖：`pandas numpy networkx matplotlib scipy`（已在 `pyproject.toml`）。
+依赖：`pandas numpy networkx matplotlib scipy yfinance`（已在 `pyproject.toml`）。
+
+## 活数据版 / Live data (`live_data.py`)
+
+`--live` 用 Yahoo Finance **只刷新市场派生字段**（市值、机构持股、分析师覆盖数、
+做空比例、trailing EV/Sales），而**保留手工的结构性字段**（Top3 份额、不可替代性、
+认证周期、需求/产能 CAGR、ramp 倍数）——因为后者是分析师领域判断，没有任何公开数据源能机械抓取。
+
+- 离线/被墙时**自动降级**回 curated 数据（`live=False`），不会 hang、不会报错；
+- 非美股自动映射 Yahoo 后缀（`SIVE.ST`、`IQE.L`、`SOIT.PA`、`VNP.TO` …）；
+- 返回**变更日志**，逐字段审计 live vs curated。
+
+> 实测：接活数据后 AXTI 从 ~$0.85B 涨到 ~$6.7B、机构持股升到 ~58%、trailing EV/Sales ~58x —
+> 「未被发现」的 alpha 已部分兑现，引擎据此把它从 #2 下调，并触发估值警报。
+
+## 对抗性验证 / Adversarial validation (`adversarial.py`, Step 3)
+
+复刻 Serenity 的「红蓝对抗」：重仓前用最严苛的 Devil's Advocate 攻击 thesis，只有多轮存活才给高信念。
+
+1. **确定性攻击向量**（离线可跑，9 类）：估值已 price-in、供给弹性/二供、技术路线（CPO vs 可插拔）、
+   已被发现（机构持股/覆盖度过高 → 没有 alpha）、稀释融资、流动性/微盘、客户集中、地缘（中国镓/铟/稀土管制）。
+   每个给出 severity(0-1)+具体反方论点+蓝方反驳 → 汇总成 **resilience（韧性）** 和 **adversarial_ev（折价后期望值）**。
+2. **蒙特卡洛**：对胜率/上行/下行加噪声 4000 次，报告 **P(EV>0)** —— 对「假设本身」的对抗测试。
+3. **存活判定**：韧性≥0.45 且 无单点致命漏洞(severity≥0.8) 且 P(EV>0)≥55% 且 基准 EV>0。
+4. **`--llm`**：可选，把 thesis 路由给 GPT/Claude/Gemini 多模型独立红队并汇总反对意见，无 key 时优雅降级。
+
+样例（活数据）：
+
+```
+TKR      Resil  AdjEV  P(EV>0)  Survive  Strongest objection
+SIVE      0.64   0.94      99%      YES  [valuation_priced_in] Implied EV/Sales ~60x ...
+AXTI      0.67   0.51      97%      YES  [valuation_priced_in] Implied EV/Sales ~58x ...
+POET      0.55   0.39      96%       no !valuation_priced_in  Implied EV/Sales ~1677x（接近无营收）
+COHR      0.65   0.07      66%       no !already_discovered   机构持股 89% / 21 家覆盖 → 没有信息差
+NVDA      0.67  -0.06      28%       no !already_discovered   机构持股 71% / 58 家覆盖
+SURVIVORS: SIVE, VNP, IQE, INPACT, AAOI, AXTI, XFAB, SOI
+```
+
+只有 survivors 才进高信念仓位，其余仅入观察名单。
 
 ### 作为对冲基金 agent 运行 / As a hedge-fund agent
 

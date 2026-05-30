@@ -15,7 +15,8 @@ matplotlib.use("Agg")  # headless
 import matplotlib.pyplot as plt
 import networkx as nx
 
-from src.serenity.chokepoint_data import LAYERS, get_universe
+from src.serenity.adversarial import redteam_node_full
+from src.serenity.chokepoint_data import LAYERS, Node, get_universe
 from src.serenity.demand_model import project
 from src.serenity.scoring import ChokepointScore, rank, score_universe
 from src.serenity.supply_chain import build_graph, structural_chokepoints
@@ -43,8 +44,8 @@ def _layer_y(layer: int) -> float:
     return float(max(LAYERS) - layer)
 
 
-def render_png(path: str = "serenity_chokepoint_report.png") -> str:
-    nodes = get_universe()
+def render_png(path: str = "serenity_chokepoint_report.png", nodes: list[Node] | None = None) -> str:
+    nodes = nodes if nodes is not None else get_universe()
     scores = score_universe(nodes)
     by_tkr = {s.ticker: s for s in scores}
     g = build_graph(nodes)
@@ -135,6 +136,34 @@ def render_png(path: str = "serenity_chokepoint_report.png") -> str:
     fig.savefig(path, dpi=130)
     plt.close(fig)
     return path
+
+
+def adversarial_report(nodes: list[Node] | None = None, top: int = 15) -> str:
+    """Step-3 red/blue-team report: rank by adversarial-adjusted EV and show survivors."""
+    nodes = nodes if nodes is not None else get_universe()
+    investable = [n for n in nodes if n.market_cap_b > 0]
+    results = [(n, redteam_node_full(n)) for n in investable]
+    results.sort(key=lambda nr: nr[1].adversarial_ev, reverse=True)
+
+    out = []
+    out.append("=" * 104)
+    out.append("ADVERSARIAL VALIDATION (Step 3: harshest Devil's Advocate red/blue team)")
+    out.append("=" * 104)
+    out.append(f"{'TKR':<7}{'Resil':>7}{'AdjEV':>7}{'P(EV>0)':>9}{'Survive':>9}  Strongest objection")
+    out.append("-" * 104)
+    for n, r in results[:top]:
+        flag = "YES" if r.survives else "no"
+        crit = f" !{','.join(r.critical_flags)}" if r.critical_flags else ""
+        out.append(
+            f"{n.ticker:<7}{r.resilience:>7.2f}{r.adversarial_ev:>7.2f}"
+            f"{(r.mc_prob_positive_ev or 0)*100:>8.0f}%{flag:>9}{crit}  {r.top_objection[:60]}"
+        )
+    survivors = [n.ticker for n, r in results if r.survives]
+    out.append("")
+    out.append(f"SURVIVORS (resilient + no critical hole + Monte-Carlo P(EV>0) >= 55%): {', '.join(survivors) or 'none'}")
+    out.append("=> Only survivors earn high conviction / a real position; the rest stay watchlist-only.")
+    out.append("=" * 104)
+    return "\n".join(out)
 
 
 def text_report(scores: list[ChokepointScore] | None = None, top: int = 15) -> str:
