@@ -32,7 +32,8 @@ def main() -> None:
     ap.add_argument("--sort", default="expected_value",
                     choices=["expected_value", "odds_ratio", "chokepoint_score", "kelly_weight"])
     ap.add_argument("--live", action="store_true", help="refresh market-derived fields from Yahoo Finance")
-    ap.add_argument("--adversarial", action="store_true", help="run Step-3 red/blue-team validation")
+    ap.add_argument("--full", action="store_true", help="show the full analytical screen (table + supply-chain map), not just the pool")
+    ap.add_argument("--adversarial", action="store_true", help="show the Step-3 red/blue-team detail table")
     ap.add_argument("--backtest", action="store_true", help="backtest the survivor book + factor + event study (yfinance)")
     ap.add_argument("--oos", action="store_true", help="genuine out-of-sample walk-forward (broad universe, train/test split)")
     ap.add_argument("--period", default="2y", help="backtest lookback window (e.g. 1y, 2y, 5y)")
@@ -62,31 +63,32 @@ def main() -> None:
     scores = score_universe(nodes)
     node_map = {n.ticker: n for n in nodes}
 
-    if not args.no_graph:
-        print(ascii_layers(nodes))
-        print()
-        print(summary_text())
-        print()
+    # ---- THE PRODUCT: the high-conviction stock pool (default headline) ------
+    from src.serenity.pool import brief
+    print(brief(nodes=nodes))  # nodes already live-enriched above if --live
 
-    # ---- base ranking -------------------------------------------------------
-    if args.sort == "expected_value":
-        print(text_report(scores, top=args.top))
-    else:
-        ranked = rank(scores, by=args.sort)[: args.top]
-        print(f"\nRanked by {args.sort}:")
-        for i, s in enumerate(ranked, 1):
-            print(f"{i:>2} {s.ticker:<7} CP={s.chokepoint_score:>5.1f} odds={s.odds_ratio:>5.1f} "
-                  f"E[V]={s.expected_value:>+5.2f} kelly={s.kelly_weight*100:>4.1f}%  {', '.join(s.flags)}")
+    # ---- optional full analytical screen ------------------------------------
+    if args.full:
+        print()
+        if not args.no_graph:
+            print(ascii_layers(nodes))
+            print()
+            print(summary_text())
+            print()
+        if args.sort == "expected_value":
+            print(text_report(scores, top=args.top))
+        else:
+            ranked = rank(scores, by=args.sort)[: args.top]
+            print(f"\nRanked by {args.sort}:")
+            for i, s in enumerate(ranked, 1):
+                print(f"{i:>2} {s.ticker:<7} CP={s.chokepoint_score:>5.1f} odds={s.odds_ratio:>5.1f} "
+                      f"E[V]={s.expected_value:>+5.2f} kelly={s.kelly_weight*100:>4.1f}%  {', '.join(s.flags)}")
 
-    # ---- adversarial validation --------------------------------------------
-    survivors: set[str] = set()
+    # ---- adversarial validation detail (optional) ---------------------------
+    survivors: set[str] = {n.ticker for n in nodes if n.market_cap_b > 0 and redteam_node_full(n).survives}
     if args.adversarial:
         print()
         print(adversarial_report(nodes, top=args.top))
-        survivors = {n.ticker for n in nodes if n.market_cap_b > 0 and redteam_node_full(n).survives}
-
-        if args.survivors_only:
-            print(f"\n[survivors-only] high-conviction book limited to: {', '.join(sorted(survivors)) or 'none'}")
 
         if args.llm:
             print("\n[llm] polling multi-model devil's advocate on top survivors ...")

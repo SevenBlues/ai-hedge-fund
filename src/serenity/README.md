@@ -1,8 +1,8 @@
 # Serenity Chokepoint Engine 瓶颈/咽喉量化引擎
 
-复刻网红交易员 **Serenity (@aleabitoreddit)** 的 *Chokepoint Theory（咽喉理论）*，
-把它从一套叙事框架变成一个**可运行、可审计、可扩展的量化筛选引擎**，用于挖掘 AI 算力供应链中
-被市场忽视的「高赔率」瓶颈股。
+复刻网红交易员 **Serenity (@aleabitoreddit)** 的 *Chokepoint Theory（咽喉理论）*。
+**这个策略只做一件事**：靠深度投研，在 AI 算力供应链里挑出一个**高确定性、高收益**的股票池——
+**在胜率尽量确定的前提下，把收益率做到最大**。
 
 > ⚠️ **免责声明 / Disclaimer**：本模块是对一套**公开描述**的投资框架的**教育性复刻**。
 > `chokepoint_data.py` 里的数据是根据公开报道（Serenity 的 X/Substack、
@@ -10,6 +10,35 @@
 > **手工整理的近似估计值**，用于演示方法论，**不是实时财务数据，也不构成任何投资建议**。
 
 ---
+
+## 产品就是这个股票池 / The product = the pool (`pool.py`)
+
+```bash
+python -m src.serenity.run_screen            # 默认输出：高确定性股票池
+python -m src.serenity.run_screen --live     # 用实时行情收紧股票池
+```
+
+流程三步，对应 Serenity 真实选股逻辑：
+
+```
+深度投研（供应链建图 + 瓶颈评分的 universe）
+   → 确定性闸门  : 只留胜率尽量确定的（瓶颈分高 + 扛得住对抗红队 + 蒙特卡洛 P(EV>0) 高）
+   → 收益最大化  : 在闸门内，按 win_prob × 上行 给仓位，把收益压在最高确定性的名字上
+```
+
+样例输出（curated，8 只；`--live` 收紧到 6 只）：
+
+```
+TIER 1 CORE   SIVE  win 68% P(EV>0)100% 上行5.0x exp.return+253% 权重23%  CW激光CPO咽喉/并购期权
+              AXTI  win 72% P(EV>0)100% 上行3.8x exp.return+191% 权重17%  InP衬底「霍尔木兹海峡」
+TIER 2 BUILD  POET / AEHR / VNP ...
+TIER 3 WATCH  IQE / INPACT / SOI ...
+POOL BLEND: 加权胜率 67%   加权期望收益 +153%（每 $1，若 thesis 在建模周期内兑现）
+```
+
+每个名字都给出：所在供应链层、一句话 thesis、催化剂、**最强反方风险**（来自对抗红队）、胜率、上行倍数、期望收益、确定性仓位。
+
+> 下面的评分/对抗/回测都是**支撑这个股票池的证据链**，不是要做一个多维交易系统。
 
 ## 核心思想 / Core idea
 
@@ -54,11 +83,13 @@
 ## 用法 / Usage
 
 ```bash
-# 终端打印筛选池 + 供应链图 + 需求模型，并生成可视化 PNG 和 JSON
-python -m src.serenity.run_screen --png out/report.png --json out/scores.json
+# 默认：直接输出高确定性股票池（产品本体）
+python -m src.serenity.run_screen
+python -m src.serenity.run_screen --live              # 实时行情收紧股票池
 
-# 活数据版：从 Yahoo Finance 刷新市值/机构持股/分析师数/做空比例/EV-Sales
-python -m src.serenity.run_screen --live --adversarial --survivors-only
+# 以下都是「证据链」，按需打开：
+python -m src.serenity.run_screen --full --png out/report.png --json out/scores.json  # 完整评分表+供应链图
+python -m src.serenity.run_screen --live --adversarial # 对抗红队明细
 
 # 真·多模型对抗验证（需配置 OPENAI/ANTHROPIC/GOOGLE API key）
 python -m src.serenity.run_screen --adversarial --llm
