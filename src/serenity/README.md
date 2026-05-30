@@ -131,6 +131,37 @@ universe 内的票直接用结构性评分；universe 外的任意票则用实�
 
 排名与 Serenity 实际重仓（AXTI、SIVE）一致，且图拓扑佐证 AXTI 有最多下游依赖。
 
+## 回测层 / Backtest (`backtest.py`)
+
+`--backtest` 用真实 Yahoo Finance 历史价格检验「认证 → 放量 → 重估」这条因子到底赚不赚钱，三个测试：
+
+1. **组合回测**：把引擎的 Kelly 加权 survivor 组合（constant-mix 日度再平衡）对比等权 universe、NVDA、QQQ。
+2. **因子回测**：高 Chokepoint Score 篮子 vs 低分篮子的多空价差——「咽喉度」本身是不是个付费因子。
+3. **事件研究**（最贴近用户问题）：用 **单日 +12% 跳涨** 代理「认证/放量重估」事件，测量事件后 **60 日前向收益** vs 无条件基线——如果咽喉真的会放量，跳涨后应是**延续**而非均值回归。
+
+```bash
+python -m src.serenity.run_screen --backtest --period 2y --png out/r.png
+```
+
+![Backtest](sample_backtest.png)
+
+实测结果（2 年窗口，截至 ~2026-05）：
+
+```
+1) PORTFOLIO
+   Engine survivors (Kelly)   ret=+1506%  CAGR=58.2%  Sharpe=1.77  maxDD=-33.9%
+   Equal-weight universe      ret=+1140%  CAGR=51.4%  Sharpe=1.67  maxDD=-38.4%
+   NVDA                       ret=  +91%  CAGR=11.3%  Sharpe=0.53           <- 「鱼肚」远远跑输
+   QQQ                        ret=  +65%  CAGR= 8.7%  Sharpe=0.74
+2) FACTOR  high-chokepoint CAGR 126%  vs  low-chokepoint 67%（咽喉度是付费因子）
+3) EVENT STUDY  +12% 跳涨后 60 日前向 +58.7%  vs 基线 +28.4%  =>  EDGE +30.3%
+                （ramp-continuation CONFIRMED，227 次事件，命中率 63%）
+```
+
+> **诚实声明**：组合/因子测试是**样本内 + 幸存者偏差**（universe 是事后选的），且赶上 2024-26 AI/光子学大牛市，
+> 数字会被放大；事件研究是其中最接近 point-in-time 的检验，仍显示明确正向 edge。本地货币计价（忽略汇率）。
+> **仅供学习，不是真实业绩，不构成投资建议。**
+
 ## 局限 / Limitations（框架自己也强调）
 
 - 数据为手工整理估计值；接入实时数据前不要据此交易。

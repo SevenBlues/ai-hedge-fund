@@ -33,6 +33,8 @@ def main() -> None:
                     choices=["expected_value", "odds_ratio", "chokepoint_score", "kelly_weight"])
     ap.add_argument("--live", action="store_true", help="refresh market-derived fields from Yahoo Finance")
     ap.add_argument("--adversarial", action="store_true", help="run Step-3 red/blue-team validation")
+    ap.add_argument("--backtest", action="store_true", help="backtest the survivor book + factor + event study (yfinance)")
+    ap.add_argument("--period", default="2y", help="backtest lookback window (e.g. 1y, 2y, 5y)")
     ap.add_argument("--survivors-only", action="store_true", help="restrict final book to adversarial survivors")
     ap.add_argument("--llm", action="store_true", help="also run the real multi-LLM devil's advocate (needs API keys)")
     ap.add_argument("--png", default=None, help="path to write the visual report PNG")
@@ -91,6 +93,16 @@ def main() -> None:
                 res = llm_redteam(node_map[tkr])
                 print(f"  {tkr}: consensus_survives={res.get('consensus_survives')} "
                       f"{('('+res['note']+')') if res.get('note') else ''}")
+
+    # ---- backtest -----------------------------------------------------------
+    if args.backtest:
+        print()
+        from src.serenity import backtest as bt
+        print(bt.text_report(period=args.period, live=args.live))
+        if args.png:
+            bpath = args.png.replace(".png", "_backtest.png")
+            if bt.render_png(bpath, period=args.period, live=args.live):
+                print(f"[png]  wrote {bpath}")
 
     # ---- artifacts ----------------------------------------------------------
     if args.json:
