@@ -109,11 +109,17 @@ def main() -> None:
     if args.oos:
         print()
         from src.serenity import oos_backtest as oos
-        print(oos.text_report(period="8y" if args.period in ("1y", "2y") else args.period))
+        oos_period = "8y" if args.period in ("1y", "2y") else args.period
+        print(oos.text_report(period=oos_period))
+        print()
+        print(oos.robustness_report(period=oos_period))
         if args.png:
             opath = args.png.replace(".png", "_oos.png")
-            if oos.render_png(opath, period="8y" if args.period in ("1y", "2y") else args.period):
+            if oos.render_png(opath, period=oos_period):
                 print(f"[png]  wrote {opath}")
+            rpath = args.png.replace(".png", "_oos_robust.png")
+            if oos.render_robust_png(rpath, period=oos_period):
+                print(f"[png]  wrote {rpath}")
 
     # ---- artifacts ----------------------------------------------------------
     if args.json:

@@ -245,6 +245,138 @@ def text_report(period: str = "8y") -> str:
     return "\n".join(out)
 
 
+# --------------------------------------------------------------------------- #
+# Robustness 1: regime analysis (does the factor survive the 2022 bear?)
+# --------------------------------------------------------------------------- #
+# Calendar regimes; the 2022 bear is the key stress test for a long-only
+# momentum+ramp factor (these can crash hard on a trend reversal).
+REGIMES = [
+    ("2020 COVID rebound", "2020-01-01", "2020-12-31"),
+    ("2021 bull", "2021-01-01", "2021-12-31"),
+    ("2022 BEAR", "2022-01-01", "2022-12-31"),
+    ("2023 AI ramp", "2023-01-01", "2023-12-31"),
+    ("2024", "2024-01-01", "2024-12-31"),
+    ("2025-26", "2025-01-01", "2099-12-31"),
+]
+
+
+def _ann(seg) -> tuple[float, float]:
+    """Return (annualised return, annualised Sharpe) for a monthly-return segment."""
+    s = seg.dropna()
+    if len(s) < 2:
+        return 0.0, 0.0
+    ann = float((1 + s).prod() ** (12 / len(s)) - 1)
+    sharpe = float((s.mean() * 12) / (s.std() * math.sqrt(12))) if s.std() > 0 else 0.0
+    return ann, sharpe
+
+
+def regime_stats(period: str = "8y") -> dict:
+    r = walk_forward(period)
+    if "error" in r:
+        return r
+    strat = r["series"]["strategy"]
+    soxx = r["series"].get("SOXX")
+    rows = []
+    for name, lo, hi in REGIMES:
+        s_seg = strat.loc[lo:hi]
+        if s_seg.dropna().empty:
+            continue
+        s_ann, s_sh = _ann(s_seg)
+        b_ann, b_sh = _ann(soxx.loc[lo:hi]) if soxx is not None else (0.0, 0.0)
+        rows.append({
+            "regime": name, "months": int(s_seg.dropna().shape[0]),
+            "strat_ann": s_ann, "strat_sharpe": s_sh,
+            "soxx_ann": b_ann, "excess": s_ann - b_ann,
+        })
+    return {"rows": rows}
+
+
+# --------------------------------------------------------------------------- #
+# Robustness 2: rolling multi-fold walk-forward (distribution of the edge)
+# --------------------------------------------------------------------------- #
+def rolling_folds(period: str = "8y", window_months: int = 12, step: int = 3) -> dict:
+    """Slide a fixed-length window across the timeline; in each window compare the
+    factor's annualised return/Sharpe to SOXX. Report the DISTRIBUTION of the
+    edge (hit-rate, median excess) instead of relying on one train/test split."""
+    import numpy as np
+
+    r = walk_forward(period)
+    if "error" in r:
+        return r
+    strat = r["series"]["strategy"].dropna()
+    soxx = r["series"].get("SOXX")
+    if soxx is None:
+        return {"error": "no SOXX benchmark available"}
+    soxx = soxx.reindex(strat.index)
+
+    excesses, strat_sharpes, soxx_sharpes, win_flags = [], [], [], []
+    n = len(strat)
+    for start in range(0, n - window_months + 1, step):
+        s_seg = strat.iloc[start:start + window_months]
+        b_seg = soxx.iloc[start:start + window_months]
+        s_ann, s_sh = _ann(s_seg)
+        b_ann, b_sh = _ann(b_seg)
+        excesses.append(s_ann - b_ann)
+        strat_sharpes.append(s_sh)
+        soxx_sharpes.append(b_sh)
+        win_flags.append(1 if s_ann > b_ann else 0)
+
+    if not excesses:
+        return {"error": "not enough data for rolling folds"}
+
+    excesses = np.array(excesses)
+    return {
+        "window_months": window_months, "step": step, "n_folds": len(excesses),
+        "hit_rate_vs_soxx": float(np.mean(win_flags)),
+        "median_excess": float(np.median(excesses)),
+        "mean_excess": float(np.mean(excesses)),
+        "pct_excess_above_0": float(np.mean(excesses > 0)),
+        "worst_excess": float(np.min(excesses)),
+        "best_excess": float(np.max(excesses)),
+        "median_strat_sharpe": float(np.median(strat_sharpes)),
+        "median_soxx_sharpe": float(np.median(soxx_sharpes)),
+        "_excesses": excesses.tolist(),
+    }
+
+
+def robustness_report(period: str = "8y") -> str:
+    out = ["=" * 100, "ROBUSTNESS — regime analysis + rolling multi-fold walk-forward", "=" * 100]
+
+    rg = regime_stats(period)
+    if "error" in rg:
+        return "\n".join(out + [f"[robust] {rg['error']}"])
+    out.append("\n1) PER-REGIME (factor vs SOXX) — key stress test is the 2022 bear:")
+    out.append(f"   {'regime':<20}{'mo':>4}{'strat CAGR':>12}{'Sharpe':>8}{'SOXX CAGR':>12}{'excess':>9}")
+    for row in rg["rows"]:
+        star = "  <= bear stress" if "BEAR" in row["regime"] else ""
+        out.append(f"   {row['regime']:<20}{row['months']:>4}{row['strat_ann']*100:>11.1f}%"
+                   f"{row['strat_sharpe']:>8.2f}{row['soxx_ann']*100:>11.1f}%{row['excess']*100:>+8.1f}%{star}")
+
+    rf = rolling_folds(period)
+    out.append("\n2) ROLLING 12-MONTH FOLDS (distribution of the edge, not one split):")
+    if "error" in rf:
+        out.append(f"   {rf['error']}")
+    else:
+        out.append(f"   {rf['n_folds']} overlapping folds (window={rf['window_months']}mo, step={rf['step']}mo)")
+        out.append(f"   hit-rate vs SOXX:        {rf['hit_rate_vs_soxx']*100:>5.0f}%  of folds the factor beat the sector")
+        out.append(f"   median excess CAGR:      {rf['median_excess']*100:>+5.1f} pts   "
+                   f"(mean {rf['mean_excess']*100:+.1f}, range {rf['worst_excess']*100:+.0f}..{rf['best_excess']*100:+.0f})")
+        out.append(f"   median Sharpe:           strategy {rf['median_strat_sharpe']:.2f}  vs  SOXX {rf['median_soxx_sharpe']:.2f}")
+        consistent = rf["hit_rate_vs_soxx"] >= 0.6 and rf["median_excess"] > 0
+        out.append(f"   => edge is {'CONSISTENT across windows' if consistent else 'REGIME-DEPENDENT (mostly the AI-ramp window)'}")
+
+    # honest read on the bear
+    bear = next((r for r in rg["rows"] if "BEAR" in r["regime"]), None)
+    if bear:
+        verdict = ("cushioned the drawdown vs SOXX" if bear["excess"] > 0 else "fell MORE than SOXX (momentum reversal risk)")
+        out.append(f"\n2022 BEAR verdict: long-only momentum+ramp {verdict} "
+                   f"(factor {bear['strat_ann']*100:+.1f}% vs SOXX {bear['soxx_ann']*100:+.1f}%).")
+    out.append("CAVEAT: residual survivorship (fixed 2026 universe, Yahoo drops delistings); overlapping folds are "
+               "not independent; long-only. Illustrative, NOT advice.")
+    out.append("=" * 100)
+    return "\n".join(out)
+
+
 def render_png(path: str = "serenity_oos.png", period: str = "8y") -> str | None:
     import matplotlib
     matplotlib.use("Agg")
@@ -281,6 +413,53 @@ def render_png(path: str = "serenity_oos.png", period: str = "8y") -> str | None
     fig.text(0.5, 0.01, "Illustrative reproduction — residual survivorship from fixed universe; not investment advice.",
              ha="center", fontsize=8, style="italic", color="#666")
     fig.tight_layout(rect=[0, 0.03, 1, 1])
+    fig.savefig(path, dpi=130)
+    plt.close(fig)
+    return path
+
+
+def render_robust_png(path: str = "serenity_oos_robust.png", period: str = "8y") -> str | None:
+    import matplotlib
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+
+    rg = regime_stats(period)
+    rf = rolling_folds(period)
+    if "error" in rg or "error" in rf:
+        return None
+
+    fig, axes = plt.subplots(1, 2, figsize=(17, 6.5))
+    fig.suptitle("Chokepoint-ramp factor — robustness (regime excess vs SOXX + rolling-fold distribution)",
+                 fontweight="bold")
+
+    # per-regime excess CAGR
+    ax = axes[0]
+    names = [r["regime"] for r in rg["rows"]]
+    exc = [r["excess"] * 100 for r in rg["rows"]]
+    colors = ["#d73027" if "BEAR" in n else ("#1a9850" if e >= 0 else "#fdae61") for n, e in zip(names, exc)]
+    ax.bar(names, exc, color=colors, edgecolor="black")
+    ax.axhline(0, color="black", lw=0.8)
+    ax.set_ylabel("excess CAGR vs SOXX (pts)")
+    ax.set_title("Per-regime edge (red = 2022 bear stress)")
+    ax.tick_params(axis="x", rotation=30)
+    for i, e in enumerate(exc):
+        ax.text(i, e + (2 if e >= 0 else -4), f"{e:+.0f}", ha="center", fontsize=8)
+
+    # rolling excess distribution
+    ax = axes[1]
+    ex = [x * 100 for x in rf["_excesses"]]
+    ax.hist(ex, bins=12, color="#4575b4", edgecolor="black", alpha=0.85)
+    ax.axvline(0, color="black", lw=1)
+    ax.axvline(rf["median_excess"] * 100, color="#1a9850", lw=2, ls="--",
+               label=f"median {rf['median_excess']*100:+.0f} pts")
+    ax.set_xlabel("12-month rolling excess CAGR vs SOXX (pts)")
+    ax.set_ylabel("# folds")
+    ax.set_title(f"{rf['n_folds']} rolling folds — beat SOXX in {rf['hit_rate_vs_soxx']*100:.0f}%")
+    ax.legend(fontsize=9)
+
+    fig.text(0.5, 0.01, "Overlapping folds (not independent); residual survivorship; long-only; illustrative, not advice.",
+             ha="center", fontsize=8, style="italic", color="#666")
+    fig.tight_layout(rect=[0, 0.03, 1, 0.95])
     fig.savefig(path, dpi=130)
     plt.close(fig)
     return path
