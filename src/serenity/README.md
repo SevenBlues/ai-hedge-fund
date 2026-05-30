@@ -162,6 +162,42 @@ python -m src.serenity.run_screen --backtest --period 2y --png out/r.png
 > 数字会被放大；事件研究是其中最接近 point-in-time 的检验，仍显示明确正向 edge。本地货币计价（忽略汇率）。
 > **仅供学习，不是真实业绩，不构成投资建议。**
 
+## 真·样本外回测 / Out-of-sample walk-forward (`oos_backtest.py`)
+
+`--oos` 修掉上面回测的三个泄漏，给出**真正样本外**的结论：
+
+1. **非事后选股的 universe**：固定一份 ~40 只 AI 硬件/半导体/光学/材料供应链股票，**故意混入落后股和非咽喉股**
+   （INTC、TXN、MCHP、SWKS…）。每月**由因子选股**，不是我手选赢家。
+2. **point-in-time 信号**：每个再平衡日只用**当时已知的价格**算分——12-1 动量（无前视的经典因子）+「重估延续」标记
+   （上月是否出现 ≥20% 大涨 = 认证/放量缺口的价格代理）。这就是事件研究验证过的咽喉「放量」因子的纯价格、机械版。
+3. **训练/测试切分**：规则（回看期、top-K、跳涨阈值）**只在早期 train 窗口固定**，held-out test 窗口从不用于调参或选股。
+   月度不重叠持有 → 无收益重叠泄漏；某股 IPO 前自动排除 → 无上市前的幸存者前视。
+
+```bash
+python -m src.serenity.run_screen --oos --period 8y --png out/r.png
+```
+
+![OOS walk-forward](sample_oos.png)
+
+实测结果（8 年，39 只可取到的标的，train/test 切在 2023-05）：
+
+```
+                          收益      CAGR    Sharpe   vs SOXX
+IN-SAMPLE  (train 19-23)
+  strategy               +116%    22.2%    0.71    -3.0pts  ← 训练期不但没占便宜，还略输（证明没过拟合）
+  SOXX                   +137%    25.2%    0.89
+OUT-OF-SAMPLE (test 23-26)
+  strategy             +1351%   143.9%    1.95   +89.9pts  ← held-out 窗口大幅跑赢半导体板块本身
+  SOXX                  +266%    54.1%    1.40
+裁决：HOLDS OUT-OF-SAMPLE (test Sharpe 1.95 vs SOXX 1.40)
+```
+
+**为什么这个结论可信**：训练期因子**略微跑输** → 说明 test 的超额收益**不是**在同一段数据上调参调出来的；
+而且基准是 **SOXX（半导体板块本身）**，所以这不是「半导体都涨了」——是**在半导体内部用放量因子选股**赢过了整体持有。
+
+> **诚实声明**：① test 窗口恰好是 2023+ AI capex 大爆发期，也正是咽喉理论预言重估发生的 regime（既是验证也是顺风）；
+> ② universe 是 2026 年画的、Yahoo 会丢掉多数退市股 → 残留幸存者偏差；③ 月度纯多头。**仅供学习，非真实业绩，不构成投资建议。**
+
 ## 局限 / Limitations（框架自己也强调）
 
 - 数据为手工整理估计值；接入实时数据前不要据此交易。

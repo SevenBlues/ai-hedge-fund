@@ -34,6 +34,7 @@ def main() -> None:
     ap.add_argument("--live", action="store_true", help="refresh market-derived fields from Yahoo Finance")
     ap.add_argument("--adversarial", action="store_true", help="run Step-3 red/blue-team validation")
     ap.add_argument("--backtest", action="store_true", help="backtest the survivor book + factor + event study (yfinance)")
+    ap.add_argument("--oos", action="store_true", help="genuine out-of-sample walk-forward (broad universe, train/test split)")
     ap.add_argument("--period", default="2y", help="backtest lookback window (e.g. 1y, 2y, 5y)")
     ap.add_argument("--survivors-only", action="store_true", help="restrict final book to adversarial survivors")
     ap.add_argument("--llm", action="store_true", help="also run the real multi-LLM devil's advocate (needs API keys)")
@@ -103,6 +104,16 @@ def main() -> None:
             bpath = args.png.replace(".png", "_backtest.png")
             if bt.render_png(bpath, period=args.period, live=args.live):
                 print(f"[png]  wrote {bpath}")
+
+    # ---- out-of-sample walk-forward ----------------------------------------
+    if args.oos:
+        print()
+        from src.serenity import oos_backtest as oos
+        print(oos.text_report(period="8y" if args.period in ("1y", "2y") else args.period))
+        if args.png:
+            opath = args.png.replace(".png", "_oos.png")
+            if oos.render_png(opath, period="8y" if args.period in ("1y", "2y") else args.period):
+                print(f"[png]  wrote {opath}")
 
     # ---- artifacts ----------------------------------------------------------
     if args.json:
