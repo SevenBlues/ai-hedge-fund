@@ -29,6 +29,8 @@ TICKERS = {
     "UUP": "UUP",       # USD bullish ETF (DXY proxy, v2.2)
     "VXN": "^VXN",      # Nasdaq-100 volatility index (QQQ put IV, v2.4)
     "VIXY": "VIXY",     # VIX short-term futures ETF (real-instrument hedge cross-check, v2.4)
+    "GLD": "GLD",       # Gold ETF (uncorrelated sleeve, v2.5)
+    "TLT": "TLT",       # 20+y Treasury ETF (uncorrelated sleeve, v2.5)
 }
 
 
@@ -82,6 +84,10 @@ def build_master_frame(data: dict[str, pd.DataFrame]) -> pd.DataFrame:
     frame["uup_close"] = data["UUP"]["Close"].reindex(base)
     frame["vxn_close"] = data["VXN"]["Close"].reindex(base)
     frame["vixy_close"] = data["VIXY"]["Close"].reindex(base)
+    for tkr in ["GLD", "TLT"]:
+        lo = tkr.lower()
+        frame[f"{lo}_open"] = data[tkr]["Open"].reindex(base)
+        frame[f"{lo}_close"] = data[tkr]["Close"].reindex(base)
     # Forward-fill the macro series for missing publication days (VIX/IRX share NYSE calendar but be safe)
     macro_cols = ["vix_close", "irx_close", "fvx_close", "shy_close", "hyg_close",
                   "ief_close", "uup_close", "vxn_close", "vixy_close"]
