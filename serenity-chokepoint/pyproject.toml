@@ -1,0 +1,41 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "serenity-chokepoint"
+version = "0.1.0"
+description = "Find AI supply-chain bottleneck ('chokepoint') stocks — a transparent, auditable reproduction of Serenity's framework. Not financial advice."
+readme = "README.md"
+license = { text = "MIT" }
+requires-python = ">=3.10"
+keywords = ["investing", "quant", "semiconductors", "ai", "supply-chain", "photonics", "cpo", "stock-screener"]
+authors = [{ name = "Serenity Chokepoint contributors" }]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Financial and Insurance Industry",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Topic :: Office/Business :: Financial :: Investment",
+]
+dependencies = [
+    "pandas>=2.0",
+    "numpy>=1.24",
+    "networkx>=3.2",
+    "scipy>=1.11",
+    "matplotlib>=3.7",
+    "yfinance>=0.2.40",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=7.4"]
+
+[project.scripts]
+serenity = "serenity_chokepoint.cli:main"
+
+[project.urls]
+Homepage = "https://github.com/SevenBlues/serenity-chokepoint"
+Repository = "https://github.com/SevenBlues/serenity-chokepoint"
+
+[tool.hatch.build.targets.wheel]
+packages = ["serenity_chokepoint"]

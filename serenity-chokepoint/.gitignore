@@ -1,0 +1,9 @@
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+.pytest_cache/
+out/
+*.json
+# assets/*.png ARE committed (referenced by README) — see git add -f
