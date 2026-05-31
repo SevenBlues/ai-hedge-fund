@@ -9,14 +9,15 @@
 It reverse-engineers the AI-compute supply chain, hunts the physically irreplaceable bottlenecks the entire buildout *must* flow through, and builds a high-conviction stock pool that **maximises return under an as-certain-as-possible win rate.**
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![PyPI](https://img.shields.io/pypi/v/serenity-chokepoint.svg)](https://pypi.org/project/serenity-chokepoint/)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/)
 [![Tests](https://img.shields.io/badge/tests-16%20passing-brightgreen.svg)](tests/)
 [![PRs welcome](https://img.shields.io/badge/PRs-welcome-orange.svg)](#-come-prove-us-wrong)
 [![Not financial advice](https://img.shields.io/badge/⚠️-NOT%20financial%20advice-red.svg)](#%EF%B8%8F-read-this-first)
 
 ```bash
-pipx install serenity-chokepoint
-serenity pool
+pip install serenity-chokepoint      # or: pipx install serenity-chokepoint
+serenity thesis AXTI                  # the full method: moat × timing × risk
 ```
 
 [中文说明](README.zh.md) · [Reproduce / Replace data](REPRODUCE.md) · [How it works](#-how-it-works) · [Performance](#-does-it-actually-work) · [Critique it](#-come-prove-us-wrong)
