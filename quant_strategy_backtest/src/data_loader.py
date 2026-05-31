@@ -31,6 +31,8 @@ TICKERS = {
     "VIXY": "VIXY",     # VIX short-term futures ETF (real-instrument hedge cross-check, v2.4)
     "GLD": "GLD",       # Gold ETF (uncorrelated sleeve, v2.5)
     "TLT": "TLT",       # 20+y Treasury ETF (uncorrelated sleeve, v2.5)
+    "EFA": "EFA",       # MSCI EAFE developed-international equity (v2.6)
+    "DBC": "DBC",       # Broad commodities (v2.6)
 }
 
 
@@ -84,7 +86,7 @@ def build_master_frame(data: dict[str, pd.DataFrame]) -> pd.DataFrame:
     frame["uup_close"] = data["UUP"]["Close"].reindex(base)
     frame["vxn_close"] = data["VXN"]["Close"].reindex(base)
     frame["vixy_close"] = data["VIXY"]["Close"].reindex(base)
-    for tkr in ["GLD", "TLT"]:
+    for tkr in ["GLD", "TLT", "EFA", "DBC"]:
         lo = tkr.lower()
         frame[f"{lo}_open"] = data[tkr]["Open"].reindex(base)
         frame[f"{lo}_close"] = data[tkr]["Close"].reindex(base)
