@@ -85,7 +85,9 @@ pipx install serenity-chokepoint        # or:  uvx serenity-chokepoint pool
 
 serenity pool                            # 👈 the curated high-conviction pool
 serenity pool --live                     # tighten it with live Yahoo Finance data
-serenity scan                            # 🛰️ live radar: rank a broad universe, find NEW names
+serenity thesis AXTI                     # 🎯 one-page full thesis: moat × timing × risk
+serenity growth AXTI                     # the ramp-inflection (timing) lens
+serenity scan                            # 🛰️ momentum ranking radar (NOT the method)
 serenity scan --tickers NVDA,AXTI,SIVE   # scan your own watchlist
 serenity validate AXTI                   # deep-dive one ticker (score + red-team)
 serenity supply-chain                    # the 7-layer map + structural chokepoints
@@ -129,7 +131,7 @@ POOL BLEND: weighted win-prob 67%   weighted expected return +153% (per $1, on t
 | **Changes?** | **yes — daily, with the market; surfaces NEW names** | stable; a high-conviction book shouldn't churn |
 | **Use it to** | *find* candidates worth researching | *commit* to the ones that survived research |
 
-So the workflow is: **`scan` to discover → `validate` to interrogate → `pool` to size.** A name marked `NEW find` in the scan is a lead the curated pool hasn't covered yet.
+So the workflow is: **`scan` to spot movement → `thesis`/`validate`/`growth` to do the real analysis → `pool` to size.** `serenity thesis <T>` is the one-page synthesis — it fuses the three lenses (structural **moat** × growth **timing** × red-team **risk**) into a single verdict (`🎯 PRIME SETUP`, `⏳ POSITIONED EARLY`, `⛔ FAILS VALIDATION`, …).
 
 ```
  # TICKER   SCORE  MOM(12-1)  RAMP    MKT$B   note

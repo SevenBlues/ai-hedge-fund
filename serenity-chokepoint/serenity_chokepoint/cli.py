@@ -9,6 +9,7 @@ Verb-based subcommands (like git / claude):
     serenity scan --tickers NVDA,AXTI,SIVE   # scan your own list
     serenity growth AXTI          # growth / ramp-inflection analysis of a ticker
     serenity growth --pool        # growth table across the curated pool
+    serenity thesis AXTI          # one-page full thesis: moat × timing × risk
     serenity validate AXTI        # deep-dive one ticker: score + red-team
     serenity screen --full        # full analytical screen (table + supply map)
     serenity supply-chain         # the 7-layer map + structural chokepoints
@@ -56,6 +57,11 @@ def cmd_growth(args):
     else:
         print("usage: serenity growth <TICKER>   |   serenity growth --pool")
         return 1
+
+
+def cmd_thesis(args):
+    from serenity_chokepoint.thesis import thesis_report
+    print(thesis_report(args.ticker))
 
 
 def cmd_validate(args):
@@ -156,6 +162,9 @@ def build_parser() -> argparse.ArgumentParser:
     sp.add_argument("--tickers", default=None, help="comma-separated custom universe (default: broad AI supply chain)")
     sp.add_argument("--period", default="2y"); sp.add_argument("--top", type=int, default=25)
     sp.set_defaults(func=cmd_scan)
+
+    sp = sub.add_parser("thesis", help="one-page full thesis: moat × timing × risk")
+    sp.add_argument("ticker"); sp.set_defaults(func=cmd_thesis)
 
     sp = sub.add_parser("growth", help="Serenity growth/ramp-inflection analysis of a ticker (or --pool)")
     sp.add_argument("ticker", nargs="?", default=None)
