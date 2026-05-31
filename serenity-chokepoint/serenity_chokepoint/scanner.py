@@ -1,19 +1,17 @@
 """
-Live full-market scanner for the chokepoint "ramp" factor.
+Live MOMENTUM RANKING over a broad universe.
 
-Unlike ``pool`` (which scores a fixed, hand-curated watchlist), ``scan`` casts a
-wide net over a broad AI supply-chain universe, pulls *live* prices, and ranks
-every name by a **point-in-time, price-derived** signal — so the output changes
-with the market day to day and surfaces names beyond the curated list.
+⚠️ This is explicitly NOT the chokepoint analysis method — it is a plain
+price-momentum ranking, included as a convenience radar. The chokepoint method
+(structural moat + growth inflection + adversarial validation) is what this
+project is actually about; momentum just tells you what has already moved.
 
-The signal is the same mechanical "chokepoint-ramp" factor the out-of-sample
-backtest validated, computable with zero look-ahead from prices alone:
-
-    score ≈ z(12-1 momentum) + tilt·(recent re-rating gap) + tilt·(small-cap)
-
-It is NOT the deep-research chokepoint score (that needs human-verified
-structural data). Think of ``scan`` as the radar that finds candidates, and
-``validate`` / ``pool`` as the deep dive on the ones worth researching.
+``scan`` casts a wide net over a broad AI supply-chain universe (or your own
+``--tickers``), pulls live prices, and ranks names by a blended multi-horizon
+momentum score (3- / 6- / 12-month returns, volatility-adjusted), flagging a
+recent re-rating gap. Output changes daily with the market and surfaces names
+beyond the curated list — use it to spot what's moving, then switch to
+``serenity validate`` / ``serenity growth`` to do the real analysis.
 
 Needs network (yfinance). Educational; not financial advice.
 """
@@ -43,19 +41,21 @@ DEFAULT_UNIVERSE = [
     "VRT", "VICR", "AEIS", "ENVX",
 ]
 
-MOM_LOOKBACK = 12        # months
-MOM_SKIP = 1             # skip most recent month
-JUMP_THRESHOLD = 0.20    # >=20% up-month = re-rating/ramp gap
+# Blended multi-horizon momentum weights (3m/6m/12m) and a re-rating-gap flag.
+HORIZON_WEIGHTS = {3: 0.25, 6: 0.35, 12: 0.40}
+VOL_ADJUST = True        # divide momentum by volatility (risk-adjusted)
+JUMP_THRESHOLD = 0.20    # >=20% up-month = recent re-rating gap
 JUMP_WINDOW = 3
-JUMP_TILT = 0.6
-SIZE_TILT = 0.4          # smaller cap -> more "undiscovered"
 
 
 @dataclass
 class ScanRow:
     ticker: str
-    score: float                       # 0..100 percentile-ranked composite
-    momentum_12_1: float
+    score: float                       # 0..100 percentile-ranked momentum
+    ret_3m: float
+    ret_6m: float
+    ret_12m: float
+    vol: float
     rerate: bool
     market_cap_b: float | None = None
     in_curated: bool = False
@@ -91,11 +91,11 @@ def _fetch_prices(tickers: list[str], period: str):
     if hasattr(close, "columns"):
         for t in close.columns:
             s = close[t].dropna()
-            if len(s) >= MOM_LOOKBACK + MOM_SKIP + 1:
+            if len(s) >= 13:
                 out[str(t)] = [float(x) for x in s.values]
     else:  # single series
         s = close.dropna()
-        if len(s) >= MOM_LOOKBACK + MOM_SKIP + 1:
+        if len(s) >= 13:
             out[tickers[0]] = [float(x) for x in s.values]
     return out or None
 
@@ -112,9 +112,15 @@ def _market_cap_b(ticker: str) -> float | None:
         return None
 
 
+def _horizon_return(prices: list[float], months: int) -> float | None:
+    if len(prices) <= months:
+        return None
+    return prices[-1] / prices[-1 - months] - 1.0
+
+
 def scan(tickers: list[str] | None = None, period: str = "2y", top: int = 25,
          enrich_cap: bool = True) -> dict:
-    """Rank a broad universe by the live chokepoint-ramp factor."""
+    """Rank a broad universe by blended, volatility-adjusted multi-horizon momentum."""
     from serenity_chokepoint.chokepoint_data import by_ticker
 
     universe = [t.upper() for t in (tickers or DEFAULT_UNIVERSE)]
@@ -123,64 +129,70 @@ def scan(tickers: list[str] | None = None, period: str = "2y", top: int = 25,
         return {"error": "no price data (need network / yfinance, or bad tickers)"}
 
     curated = set(by_ticker())
-    raw_mom, names = [], []
-    rerate_flags = []
+    names: list[str] = []
+    rets_by_h: dict[int, list[float]] = {h: [] for h in HORIZON_WEIGHTS}
+    vols: list[float] = []
+    rerate_flags: list[bool] = []
+
+    import numpy as np
     for t, p in prices.items():
-        # monthly returns
-        rets = [p[i] / p[i - 1] - 1 for i in range(1, len(p))]
-        mom = p[-1 - MOM_SKIP] / p[-(MOM_LOOKBACK + MOM_SKIP)] - 1.0
-        window = rets[-JUMP_WINDOW:]
-        rerate = max(window) >= JUMP_THRESHOLD if window else False
+        monthly = [p[i] / p[i - 1] - 1 for i in range(1, len(p))]
         names.append(t)
-        raw_mom.append(mom)
-        rerate_flags.append(rerate)
+        for h in HORIZON_WEIGHTS:
+            rets_by_h[h].append(_horizon_return(p, h) or 0.0)
+        vols.append(float(np.std(monthly) * math.sqrt(12)) if monthly else 0.0)
+        window = monthly[-JUMP_WINDOW:]
+        rerate_flags.append(max(window) >= JUMP_THRESHOLD if window else False)
 
-    mom_z = _zscores(raw_mom)
+    # blend z-scored horizon returns; optionally divide by volatility (risk-adjusted)
+    z_by_h = {h: _zscores(rets_by_h[h]) for h in HORIZON_WEIGHTS}
+    blended = []
+    for i in range(len(names)):
+        m = sum(HORIZON_WEIGHTS[h] * z_by_h[h][i] for h in HORIZON_WEIGHTS)
+        if VOL_ADJUST and vols[i] > 0:
+            m = m / (1.0 + vols[i])           # damp high-volatility names
+        blended.append(m)
 
-    # optional small-cap tilt for the displayed/ranked names
+    order = sorted(range(len(names)), key=lambda i: blended[i], reverse=True)
+    n = len(order)
+
+    # market-cap display only (no longer tilts the ranking — this is pure momentum)
     caps = {t: None for t in names}
     if enrich_cap:
-        # enrich a generous slice (rank a first pass by momentum, enrich the top)
-        prelim = sorted(range(len(names)), key=lambda i: mom_z[i] + JUMP_TILT * rerate_flags[i], reverse=True)
-        for i in prelim[: max(top * 2, 40)]:
+        for i in order[: max(top, 25)]:
             caps[names[i]] = _market_cap_b(names[i])
-    cap_vals = [math.log10(caps[t]) if caps[t] else 1.0 for t in names]  # ~log $B
-    size_z = [-z for z in _zscores(cap_vals)]  # smaller cap -> higher
-
-    raw = [mom_z[i] + JUMP_TILT * (1.0 if rerate_flags[i] else 0.0) + SIZE_TILT * size_z[i]
-           for i in range(len(names))]
-    order = sorted(range(len(names)), key=lambda i: raw[i], reverse=True)
-    n = len(order)
 
     rows: list[ScanRow] = []
     for rank_pos, i in enumerate(order):
         pct = 100.0 * (n - 1 - rank_pos) / max(n - 1, 1)
         rows.append(ScanRow(
             ticker=names[i], score=round(pct, 1),
-            momentum_12_1=round(raw_mom[i], 3), rerate=rerate_flags[i],
-            market_cap_b=caps[names[i]], in_curated=names[i] in curated,
-            components={"mom_z": round(mom_z[i], 2), "size_z": round(size_z[i], 2)},
+            ret_3m=round(rets_by_h[3][i], 3), ret_6m=round(rets_by_h[6][i], 3),
+            ret_12m=round(rets_by_h[12][i], 3), vol=round(vols[i], 3),
+            rerate=rerate_flags[i], market_cap_b=caps[names[i]],
+            in_curated=names[i] in curated,
         ))
     return {"rows": rows, "n": n, "period": period, "universe_size": len(universe)}
 
 
 def text_report(tickers: list[str] | None = None, period: str = "2y", top: int = 25) -> str:
     res = scan(tickers=tickers, period=period, top=top)
-    out = ["=" * 92, "SERENITY CHOKEPOINT — LIVE MARKET SCAN (point-in-time ramp factor)", "=" * 92]
+    out = ["=" * 96, "SERENITY — LIVE MOMENTUM RANKING  (⚠️ momentum only, NOT the chokepoint method)", "=" * 96]
     if "error" in res:
         return "\n".join(out + [f"[scan] {res['error']}", "Try: serenity scan --tickers NVDA,AXTI,SIVE  (and check your connection)."])
-    out.append(f"Scanned {res['n']}/{res['universe_size']} names over {res['period']}. "
-               f"Signal = 12-1 momentum + re-rating gap + small-cap tilt (live, changes daily).")
-    out.append(f"{'#':>2} {'TICKER':<7}{'SCORE':>7}{'MOM(12-1)':>11}{'RAMP':>6}{'MKT$B':>9}   note")
-    out.append("-" * 92)
+    out.append(f"Ranked {res['n']}/{res['universe_size']} names. "
+               f"Momentum = vol-adjusted blend of 3m/6m/12m returns (live, changes daily).")
+    out.append(f"{'#':>2} {'TICKER':<7}{'MOM':>6}{'3m':>7}{'6m':>7}{'12m':>8}{'vol':>6}{'gap':>5}{'MKT$B':>9}  note")
+    out.append("-" * 96)
     for i, r in enumerate(res["rows"][:top], 1):
         cap = f"{r.market_cap_b:.1f}" if r.market_cap_b else "  ?"
-        ramp = "🔥" if r.rerate else "  "
-        note = "curated" if r.in_curated else "NEW find"
-        out.append(f"{i:>2} {r.ticker:<7}{r.score:>7.1f}{r.momentum_12_1*100:>10.0f}%{ramp:>6}{cap:>9}   {note}")
-    out.append("-" * 92)
-    out.append("SCORE = cross-sectional percentile of the ramp factor (100 = strongest in this scan).")
-    out.append("'NEW find' = surfaced by the radar but NOT in the curated pool — candidates to research next.")
-    out.append("Radar only: confirm with `serenity validate <T>` / deep research. Not financial advice.")
-    out.append("=" * 92)
+        gap = "🔥" if r.rerate else " ·"
+        note = "curated" if r.in_curated else "new"
+        out.append(f"{i:>2} {r.ticker:<7}{r.score:>6.0f}{r.ret_3m*100:>6.0f}%{r.ret_6m*100:>6.0f}%"
+                   f"{r.ret_12m*100:>7.0f}%{r.vol*100:>5.0f}%{gap:>5}{cap:>9}  {note}")
+    out.append("-" * 96)
+    out.append("MOM = percentile of vol-adjusted 3m/6m/12m momentum (100 = strongest here).  🔥 = recent >20% month.")
+    out.append("'new' = not in the curated pool. Momentum tells you what ALREADY moved — it is NOT a buy signal.")
+    out.append("Do the real work next: `serenity growth <T>` + `serenity validate <T>`. Not financial advice.")
+    out.append("=" * 96)
     return "\n".join(out)

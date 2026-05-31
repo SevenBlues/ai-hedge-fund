@@ -137,6 +137,48 @@ So the workflow is: **`scan` to discover → `validate` to interrogate → `pool
  6 ICHR      90.7      ...x     🔥      2.5   NEW find   ← radar surfaced it; go research it
 ```
 
+## 📈 Growth analysis — the ramp-inflection lens (`serenity growth`)
+
+This is the analytical core applied to **growth**, and it is **not** a generic
+"high revenue growth = good" screen. Serenity's thesis monetises one specific
+moment — the **volume-ramp inflection**, when a qualified chokepoint supplier
+goes from sampling to mass production and the economics flip: revenue
+*accelerates*, **gross margin turns up**, and operating losses collapse. Bought
+before the Street re-rates it, that inflection is the asymmetric trade.
+
+```bash
+serenity growth AXTI       # one ticker, full ramp breakdown (live, free data)
+serenity growth --pool     # ramp-stage table across the curated chokepoint pool
+```
+
+```
+SERENITY GROWTH ANALYSIS — AXTI (ramp-inflection lens)
+  GROWTH SCORE : 72.1/100      stage: 🚀 EARLY RAMP (margin inflection)
+     revenue acceleration     0.50  ██████████
+     margin inflection        1.00  ████████████████████   ← gross margin +36pts, op margin +47pts
+     revenue growth (YoY)     0.78  ████████████████
+     reinvestment (R&D)       0.75  ███████████████
+     growth-adj. valuation    0.51  ██████████
+```
+
+The Growth Score weights, in order of Serenity-relevance: **acceleration (25)**,
+**margin inflection (25)**, revenue growth (22), reinvestment/R&D (13), and a
+venture-style **growth-adjusted valuation (15)** — not trailing P/S.
+
+> 🔑 **Two scores, one thesis.** The *chokepoint score* is the structural bet
+> (the moat); the *growth score* is the **timing** (has the ramp started?). A
+> pre-ramp chokepoint deliberately scores LOW on growth — that's the point: you
+> buy the moat *before* the ramp shows up in the numbers, and use `growth` to
+> watch the inflection arrive. **High chokepoint + turning-up growth = the
+> ideal Serenity setup.**
+
+## 🛰️ A momentum ranking, clearly labelled (`serenity scan`)
+
+`serenity scan` ranks a broad universe by vol-adjusted 3m/6m/12m momentum. It is
+a **convenience radar, explicitly NOT the method** — momentum only tells you
+what already moved. Use it to spot movement, then do the real work with
+`growth` + `validate`.
+
 ## 🧠 How it works
 
 Every node in the supply chain gets two things: a **Chokepoint Score** (is it a real bottleneck?) and an **asymmetric-payoff** estimate (is it a high-odds bet?).
