@@ -271,3 +271,11 @@ OUT-OF-SAMPLE (test 23-26)
 1. 在 `chokepoint_data.py` 增删 `Node`、调整 `depends_on` 边即可改写供应链图与评分。
 2. 在 `scoring.py` 调权重 `WEIGHTS` 或改 `_payoff` 的胜率/上下行假设。
 3. 接实时数据：替换 `Node` 字段来源为 `src.tools.api` 或 yfinance，保留评分逻辑不变。
+
+## 复现与测试 / Reproduce & test
+
+- **复现指南**：见 [`REPRODUCE.md`](REPRODUCE.md) —— 如何跑通、**把占位数据换成真实数据**(逐字段来源表)、复现每张图/回测、以及「怎么批判这个引擎」。
+- **测试**(全部离线、无需联网/API key)：
+  ```bash
+  pytest tests/test_serenity.py -q     # 16 项不变量：评分边界、确定性闸门、图拓扑、对抗、live 降级 …
+  ```
