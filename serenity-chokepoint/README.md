@@ -83,8 +83,10 @@ It is **not** a multi-factor trading system. It does one thing: deep research �
 pipx install serenity-chokepoint        # or:  uvx serenity-chokepoint pool
                                          # or:  pip install serenity-chokepoint
 
-serenity pool                            # 👈 the product: the stock pool
+serenity pool                            # 👈 the curated high-conviction pool
 serenity pool --live                     # tighten it with live Yahoo Finance data
+serenity scan                            # 🛰️ live radar: rank a broad universe, find NEW names
+serenity scan --tickers NVDA,AXTI,SIVE   # scan your own watchlist
 serenity validate AXTI                   # deep-dive one ticker (score + red-team)
 serenity supply-chain                    # the 7-layer map + structural chokepoints
 serenity backtest --oos                  # the honest out-of-sample test
@@ -117,6 +119,23 @@ POOL BLEND: weighted win-prob 67%   weighted expected return +153% (per $1, on t
 </details>
 
 ---
+
+## 🛰️ Radar vs. deep dive — two different tools
+
+| | `serenity scan` (radar) | `serenity pool` (deep dive) |
+|---|---|---|
+| **Universe** | broad (~60 names, or your `--tickers`) | a fixed, hand-researched watchlist |
+| **Signal** | live, price-only **ramp factor** (12-1 momentum + re-rating gap + small-cap tilt) | full structural Chokepoint Score + asymmetric odds + red-team |
+| **Changes?** | **yes — daily, with the market; surfaces NEW names** | stable; a high-conviction book shouldn't churn |
+| **Use it to** | *find* candidates worth researching | *commit* to the ones that survived research |
+
+So the workflow is: **`scan` to discover → `validate` to interrogate → `pool` to size.** A name marked `NEW find` in the scan is a lead the curated pool hasn't covered yet.
+
+```
+ # TICKER   SCORE  MOM(12-1)  RAMP    MKT$B   note
+ 1 AXTI     100.0      ...x     🔥      6.7   curated
+ 6 ICHR      90.7      ...x     🔥      2.5   NEW find   ← radar surfaced it; go research it
+```
 
 ## 🧠 How it works
 
