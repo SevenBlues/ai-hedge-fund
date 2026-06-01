@@ -11,7 +11,7 @@ It reverse-engineers the AI-compute supply chain, hunts the physically irreplace
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![PyPI](https://img.shields.io/pypi/v/serenity-chokepoint.svg)](https://pypi.org/project/serenity-chokepoint/)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/)
-[![Tests](https://img.shields.io/badge/tests-16%20passing-brightgreen.svg)](tests/)
+[![Tests](https://img.shields.io/badge/tests-21%20passing-brightgreen.svg)](tests/)
 [![PRs welcome](https://img.shields.io/badge/PRs-welcome-orange.svg)](#-come-prove-us-wrong)
 [![Not financial advice](https://img.shields.io/badge/⚠️-NOT%20financial%20advice-red.svg)](#%EF%B8%8F-read-this-first)
 
@@ -93,6 +93,7 @@ serenity scan --tickers NVDA,AXTI,SIVE   # scan your own watchlist
 serenity validate AXTI                   # deep-dive one ticker (score + red-team)
 serenity supply-chain                    # the 7-layer map + structural chokepoints
 serenity backtest --oos                  # the honest out-of-sample test
+serenity audit                           # 🔬 ALL significance tests → evidence scorecard
 serenity --help
 ```
 
@@ -247,6 +248,25 @@ Broad fixed universe (winners **and** laggards), point-in-time price-only signal
 
 **Bottom line:** the alpha looks real but **regime-dependent** and **volatile** — consistent with a concentrated, high-conviction, ride-the-ramp strategy. We'd rather you know that going in.
 
+### 4️⃣ The honest-est one: is the signal *statistically significant?* (mostly **no**)
+
+A backtest curve is the easiest thing to fake and the least informative thing to show. So we ran the signal through the tests most reproductions skip — **Information Coefficient, t-stats, p-values, a multiple-testing-corrected factor battery, and a momentum-controlled test of the score itself** — and rolled them into one command:
+
+```bash
+serenity audit          # → SCORECARD: OOS=PASS | Factor-significance=FAIL | Structural=WEAK
+```
+
+| Test | Result | Verdict |
+|---|---|--:|
+| OOS walk-forward vs SOXX | factor Sharpe +1.95 vs 1.40 | 🟢 PASS |
+| Factor IC significance | mean IC +0.014, **p = 0.54**; L/S Newey-West **p = 0.33** | 🔴 noise |
+| Factor battery (Bonferroni α=0.006) | **none survive**; `resid_mom` (ex-beta) strongest | 🟡 |
+| Chokepoint score vs returns | raw IC +0.44, but **vanishes once momentum is removed** | 🟡 |
+
+> **OVERALL EVIDENCE GRADE: WEAK / SUGGESTIVE.** The +143.9% OOS return is real, but it's **mostly momentum and sector beta** — an independent, *quantifiable* structural alpha is plausible but **not statistically demonstrated** on one sector, in one AI-bull epoch. A low grade is *not* proof the thesis is wrong: the score has no point-in-time history, so it can't be OOS-tested without fabricating data — and we won't.
+
+📄 **Full statistical writeup, every number, and how the stats are verified against SciPy: [VALIDATION.md](VALIDATION.md).**
+
 ---
 
 ## 🥷 We attack our own thesis (the part we're proudest of)
@@ -278,6 +298,9 @@ serenity_chokepoint/
 ├── live_data.py         # Yahoo Finance refresh of market-derived fields
 ├── backtest.py          # in-sample portfolio + factor + event study
 ├── oos_backtest.py      # out-of-sample walk-forward + regime/rolling robustness
+├── factor_validation.py # IC / t-stat / p-value + factor battery (Bonferroni)
+├── structural_validation.py # does the score beat momentum? (cross-section)
+├── audit.py             # `serenity audit`: all tests → one evidence scorecard
 ├── pool.py              # THE PRODUCT: certainty-gated, return-maximising pool
 └── cli.py               # the `serenity` command
 ```
@@ -292,7 +315,7 @@ The bundled numbers are placeholders. [**REPRODUCE.md**](REPRODUCE.md) gives a p
 
 ```bash
 pip install serenity-chokepoint[dev]
-pytest -q          # 16 network-free tests pinning the engine's invariants
+pytest -q          # 21 network-free tests pinning the engine's invariants
 ```
 
 ---

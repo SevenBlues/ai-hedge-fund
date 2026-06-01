@@ -25,7 +25,7 @@ Modules
 - cli             : the `serenity` command-line interface
 """
 
-__version__ = "0.7.0"
+__version__ = "0.8.0"
 
 from serenity_chokepoint.scoring import ChokepointScore, score_universe  # noqa: F401
 from serenity_chokepoint.pool import brief, select_pool  # noqa: F401
