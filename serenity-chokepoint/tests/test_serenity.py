@@ -230,3 +230,23 @@ def test_newey_west_t_behaves():
     t_zero, p_zero = _newey_west_t([0.01, -0.01] * 15, lags=3)
     assert abs(t_zero) < 2
     assert 0.0 <= p_zero <= 1.0
+
+
+def test_ols_matches_known_line():
+    """OLS recovers a known slope/intercept and gives a high R² on clean data."""
+    from serenity_chokepoint.structural_validation import _ols
+
+    x = list(range(10))
+    y = [2.0 * xi + 1.0 for xi in x]  # perfect line
+    reg = _ols(x, y)
+    assert abs(reg.slope - 2.0) < 1e-9
+    assert abs(reg.intercept - 1.0) < 1e-9
+    assert reg.r_squared > 0.999
+
+
+def test_rankdata_handles_ties():
+    import numpy as np
+    from serenity_chokepoint.structural_validation import _rankdata
+
+    out = _rankdata(np.array([3.0, 1.0, 1.0, 2.0, 3.0]))
+    assert list(out) == [4.5, 1.5, 1.5, 3.0, 4.5]

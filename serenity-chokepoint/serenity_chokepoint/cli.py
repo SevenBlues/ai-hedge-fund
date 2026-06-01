@@ -67,6 +67,11 @@ def cmd_validate_factor(args):
         print(text_report(period=args.period))
 
 
+def cmd_validate_structural(args):
+    from serenity_chokepoint.structural_validation import text_report
+    print(text_report(period=args.period))
+
+
 def cmd_thesis(args):
     from serenity_chokepoint.thesis import thesis_report
     print(thesis_report(args.ticker))
@@ -175,6 +180,10 @@ def build_parser() -> argparse.ArgumentParser:
     sp.add_argument("--period", default="8y")
     sp.add_argument("--zoo", action="store_true", help="test a whole battery of factors with multiple-testing correction")
     sp.set_defaults(func=cmd_validate_factor)
+
+    sp = sub.add_parser("validate-structural", help="does the chokepoint SCORE explain returns, beyond momentum?")
+    sp.add_argument("--period", default="2y")
+    sp.set_defaults(func=cmd_validate_structural)
 
     sp = sub.add_parser("thesis", help="one-page full thesis: moat × timing × risk")
     sp.add_argument("ticker"); sp.set_defaults(func=cmd_thesis)
