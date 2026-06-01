@@ -59,6 +59,14 @@ def cmd_growth(args):
         return 1
 
 
+def cmd_validate_factor(args):
+    from serenity_chokepoint.factor_validation import text_report, zoo_report
+    if getattr(args, "zoo", False):
+        print(zoo_report(period=args.period))
+    else:
+        print(text_report(period=args.period))
+
+
 def cmd_thesis(args):
     from serenity_chokepoint.thesis import thesis_report
     print(thesis_report(args.ticker))
@@ -162,6 +170,11 @@ def build_parser() -> argparse.ArgumentParser:
     sp.add_argument("--tickers", default=None, help="comma-separated custom universe (default: broad AI supply chain)")
     sp.add_argument("--period", default="2y"); sp.add_argument("--top", type=int, default=25)
     sp.set_defaults(func=cmd_scan)
+
+    sp = sub.add_parser("validate-factor", help="statistical factor tests: IC, t-stats, p-values (is the signal real?)")
+    sp.add_argument("--period", default="8y")
+    sp.add_argument("--zoo", action="store_true", help="test a whole battery of factors with multiple-testing correction")
+    sp.set_defaults(func=cmd_validate_factor)
 
     sp = sub.add_parser("thesis", help="one-page full thesis: moat × timing × risk")
     sp.add_argument("ticker"); sp.set_defaults(func=cmd_thesis)

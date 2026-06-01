@@ -207,3 +207,26 @@ def test_exp_return_monotonic_in_winprob():
     lo = _exp_return(0.4, 4.0, 0.5)
     hi = _exp_return(0.8, 4.0, 0.5)
     assert hi > lo
+
+
+def test_factor_pvalues_match_reference():
+    """The no-scipy t-distribution p-values must match known reference values."""
+    from serenity_chokepoint.factor_validation import _two_sided_p
+
+    # reference two-sided p-values from scipy.stats.t: (t, df) -> p
+    cases = [(2.0, 30, 0.054625), (3.2, 100, 0.001842), (0.5, 12, 0.626117),
+             (4.0, 24, 0.000527), (1.96, 1000, 0.050273)]
+    for t, df, expected in cases:
+        assert abs(_two_sided_p(t, df) - expected) < 1e-4
+
+
+def test_newey_west_t_behaves():
+    """Constant-positive series -> highly significant; zero-mean -> not."""
+    from serenity_chokepoint.factor_validation import _newey_west_t
+
+    t_const, _ = _newey_west_t([0.02] * 30, lags=3)
+    assert t_const > 5
+
+    t_zero, p_zero = _newey_west_t([0.01, -0.01] * 15, lags=3)
+    assert abs(t_zero) < 2
+    assert 0.0 <= p_zero <= 1.0
