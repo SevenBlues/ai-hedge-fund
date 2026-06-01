@@ -250,3 +250,16 @@ def test_rankdata_handles_ties():
 
     out = _rankdata(np.array([3.0, 1.0, 1.0, 2.0, 3.0]))
     assert list(out) == [4.5, 1.5, 1.5, 3.0, 4.5]
+
+
+def test_audit_overall_grade_logic():
+    """The scorecard -> overall-grade mapping must be monotone in evidence."""
+    from serenity_chokepoint.audit import _overall, _grade
+
+    assert _grade(True, True) == "PASS"
+    assert _grade(False, True) == "WEAK"
+    assert _grade(False, False) == "FAIL"
+
+    assert _overall(["PASS", "PASS", "WEAK"])[0] == "MODERATE"
+    assert _overall(["PASS", "FAIL", "WEAK"])[0] == "WEAK / SUGGESTIVE"
+    assert _overall(["FAIL", "FAIL", "FAIL"])[0] == "INSUFFICIENT"

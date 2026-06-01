@@ -15,6 +15,9 @@ Verb-based subcommands (like git / claude):
     serenity supply-chain         # the 7-layer map + structural chokepoints
     serenity backtest             # in-sample backtest + factor + event study
     serenity backtest --oos       # genuine out-of-sample walk-forward + robustness
+    serenity validate-factor      # IC / t-stat / p-value factor significance (--zoo for battery)
+    serenity validate-structural  # does the chokepoint SCORE beat momentum?
+    serenity audit                # ALL self-falsification tests -> evidence scorecard + verdict
     serenity report --png out.png # write the 4-panel visual report
     serenity version
 """
@@ -70,6 +73,11 @@ def cmd_validate_factor(args):
 def cmd_validate_structural(args):
     from serenity_chokepoint.structural_validation import text_report
     print(text_report(period=args.period))
+
+
+def cmd_audit(args):
+    from serenity_chokepoint.audit import text_report
+    print(text_report(period_oos=args.period, period_struct=args.struct_period))
 
 
 def cmd_thesis(args):
@@ -184,6 +192,11 @@ def build_parser() -> argparse.ArgumentParser:
     sp = sub.add_parser("validate-structural", help="does the chokepoint SCORE explain returns, beyond momentum?")
     sp.add_argument("--period", default="2y")
     sp.set_defaults(func=cmd_validate_structural)
+
+    sp = sub.add_parser("audit", help="run ALL self-falsification tests -> one evidence scorecard + verdict")
+    sp.add_argument("--period", default="8y", help="period for OOS + factor tests")
+    sp.add_argument("--struct-period", default="2y", help="period for the structural cross-section")
+    sp.set_defaults(func=cmd_audit)
 
     sp = sub.add_parser("thesis", help="one-page full thesis: moat × timing × risk")
     sp.add_argument("ticker"); sp.set_defaults(func=cmd_thesis)
