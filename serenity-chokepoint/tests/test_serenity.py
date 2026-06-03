@@ -263,3 +263,32 @@ def test_audit_overall_grade_logic():
     assert _overall(["PASS", "PASS", "WEAK"])[0] == "MODERATE"
     assert _overall(["PASS", "FAIL", "WEAK"])[0] == "WEAK / SUGGESTIVE"
     assert _overall(["FAIL", "FAIL", "FAIL"])[0] == "INSUFFICIENT"
+
+
+def test_proxy_triage_thresholds_and_weights():
+    """Proxy triage must be monotone, and only the 4 structural pillars are 'missing'."""
+    from serenity_chokepoint.proxy_score import ProxyScore, undiscovered_verdict
+
+    assert undiscovered_verdict(0.70)[0] == "✅ FITS THE PROFILE"
+    assert undiscovered_verdict(0.50)[0] == "🟡 BORDERLINE"
+    assert undiscovered_verdict(0.20)[0] == "🔴 ALREADY DISCOVERED"
+
+    # 22+22+16+16 = 76 of 100 score-points are structural / unknowable
+    ps = ProxyScore("X", ok=True, info_asym=1.0, catalyst_short=0.0)
+    assert ps.missing_weight == 76
+    # only information_asymmetry (weight 14) is fully justified when catalyst clue is 0
+    assert abs(ps.observable_points - 14.0) < 1e-9
+
+
+def test_proxy_node_only_reads_market_fields():
+    """The minimal Node built for a quote must score info-asymmetry from market
+    fields alone, regardless of the neutral structural placeholders."""
+    from serenity_chokepoint.proxy_score import _node_for_quote, proxy_chokepoint
+    from serenity_chokepoint.live_data import LiveQuote
+    from serenity_chokepoint.scoring import _information_asymmetry
+
+    q = LiveQuote(ticker="TEST", ok=True, market_cap_b=0.3,
+                  inst_ownership=0.15, analyst_coverage=2, short_interest=0.10)
+    node = _node_for_quote(q)
+    # tiny cap + low inst + thin coverage -> high information asymmetry
+    assert _information_asymmetry(node) > 0.7

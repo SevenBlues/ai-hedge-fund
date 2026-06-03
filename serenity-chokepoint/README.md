@@ -11,7 +11,7 @@ It reverse-engineers the AI-compute supply chain, hunts the physically irreplace
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![PyPI](https://img.shields.io/pypi/v/serenity-chokepoint.svg)](https://pypi.org/project/serenity-chokepoint/)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/)
-[![Tests](https://img.shields.io/badge/tests-21%20passing-brightgreen.svg)](tests/)
+[![Tests](https://img.shields.io/badge/tests-23%20passing-brightgreen.svg)](tests/)
 [![PRs welcome](https://img.shields.io/badge/PRs-welcome-orange.svg)](#-come-prove-us-wrong)
 [![Not financial advice](https://img.shields.io/badge/⚠️-NOT%20financial%20advice-red.svg)](#%EF%B8%8F-read-this-first)
 
@@ -87,6 +87,7 @@ pipx install serenity-chokepoint        # or:  uvx serenity-chokepoint pool
 serenity pool                            # 👈 the curated high-conviction pool
 serenity pool --live                     # tighten it with live Yahoo Finance data
 serenity thesis AXTI                     # 🎯 one-page full thesis: moat × timing × risk
+serenity proxy ALAB                      # 🔭 triage ANY ticker: is it worth researching?
 serenity growth AXTI                     # the ramp-inflection (timing) lens
 serenity scan                            # 🛰️ momentum ranking radar (NOT the method)
 serenity scan --tickers NVDA,AXTI,SIVE   # scan your own watchlist
@@ -134,6 +135,8 @@ POOL BLEND: weighted win-prob 67%   weighted expected return +153% (per $1, on t
 | **Use it to** | *find* candidates worth researching | *commit* to the ones that survived research |
 
 So the workflow is: **`scan` to spot movement → `thesis`/`validate`/`growth` to do the real analysis → `pool` to size.** `serenity thesis <T>` is the one-page synthesis — it fuses the three lenses (structural **moat** × growth **timing** × red-team **risk**) into a single verdict (`🎯 PRIME SETUP`, `⏳ POSITIONED EARLY`, `⛔ FAILS VALIDATION`, …).
+
+> 🔭 **Bring your own ticker.** The structural moat is hand-researched, so it only exists for the curated names. For *anything else*, `serenity proxy <T>` gives an honest **triage**: it scores the one pillar that *is* mechanically screenable — **information asymmetry** (small + lightly-owned + thinly-covered = still undiscovered) — and lists the four structural pillars you'd have to research yourself (76% of the score). A $61B, 83%-institutional name comes back `🔴 ALREADY DISCOVERED`; a tiny, overlooked one comes back `✅ FITS THE PROFILE — worth the research`. It tells you where to *spend* your research time, and refuses to fake the rest.
 
 ```
  # TICKER   SCORE  MOM(12-1)  RAMP    MKT$B   note
@@ -292,6 +295,7 @@ On live data this correctly **kills** names the naive score would keep — e.g. 
 serenity_chokepoint/
 ├── chokepoint_data.py   # curated universe of supply-chain nodes + attributes
 ├── scoring.py           # Chokepoint Score (0–100) + asymmetric-odds engine
+├── proxy_score.py       # market-observable triage for ANY ticker (1 screenable pillar)
 ├── supply_chain.py      # NetworkX dependency graph + topological chokepoints
 ├── demand_model.py      # AI-compute → optical-interconnect demand projection
 ├── adversarial.py       # Step-3 red/blue team + Monte-Carlo (+ optional LLMs)
@@ -315,7 +319,7 @@ The bundled numbers are placeholders. [**REPRODUCE.md**](REPRODUCE.md) gives a p
 
 ```bash
 pip install serenity-chokepoint[dev]
-pytest -q          # 21 network-free tests pinning the engine's invariants
+pytest -q          # 23 network-free tests pinning the engine's invariants
 ```
 
 ---

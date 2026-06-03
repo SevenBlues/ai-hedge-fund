@@ -61,6 +61,7 @@ def thesis_report(ticker: str) -> str:
     t = ticker.upper()
     universe = by_ticker()
     curated = t in universe
+    proxy = None
 
     out = ["=" * 84, f"SERENITY THESIS — {t}   (moat × timing × risk)", "=" * 84]
 
@@ -77,9 +78,11 @@ def thesis_report(ticker: str) -> str:
         out.append("   strongest pillars: " + ", ".join(f"{k} {v:.2f}" for k, v in top_pillars))
         out.append(f"   flags: {', '.join(cp.flags) or '—'}")
     else:
-        out.append("\n▍ MOAT  — structural chokepoint     n/a")
-        out.append(f"   {t} is not in the curated chokepoint universe.")
-        out.append("   The structural moat needs human research (supply share, qualification, irreplaceability).")
+        from serenity_chokepoint.proxy_score import proxy_chokepoint, moat_lines
+        proxy = proxy_chokepoint(t)
+        out.append("\n▍ MOAT  — structural chokepoint     proxy (market-observable only)")
+        out.append(f"   {t} is not curated — the structural pillars need human research.")
+        out.extend(moat_lines(proxy))
 
     # ---- TIMING ----
     g = analyze_growth(t)
@@ -110,6 +113,13 @@ def thesis_report(ticker: str) -> str:
         red.survives if red else False,
         red.top_objection if red else "",
     )
+    if not curated and proxy is not None and proxy.ok:
+        from serenity_chokepoint.proxy_score import undiscovered_verdict
+        tri_head, tri_why = undiscovered_verdict(proxy.info_asym)
+        why = (f"No human-researched structural data yet. On the one screenable pillar "
+               f"(information asymmetry), {t} is {tri_head}: {tri_why} "
+               f"Establish the 4 structural pillars (REPRODUCE.md) to get a real score.")
+
     out.append("\n" + "─" * 84)
     out.append(f"  VERDICT: {headline}")
     out.append(f"  {why}")

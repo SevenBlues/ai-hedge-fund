@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "serenity-chokepoint"
-version = "0.8.0"
+version = "0.9.0"
 description = "Find AI supply-chain bottleneck ('chokepoint') stocks — a transparent, auditable reproduction of Serenity's framework. Not financial advice."
 readme = "README.md"
 license = { text = "MIT" }

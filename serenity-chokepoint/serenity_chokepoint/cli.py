@@ -10,6 +10,7 @@ Verb-based subcommands (like git / claude):
     serenity growth AXTI          # growth / ramp-inflection analysis of a ticker
     serenity growth --pool        # growth table across the curated pool
     serenity thesis AXTI          # one-page full thesis: moat × timing × risk
+    serenity proxy ALAB           # market-observable chokepoint triage for ANY ticker
     serenity validate AXTI        # deep-dive one ticker: score + red-team
     serenity screen --full        # full analytical screen (table + supply map)
     serenity supply-chain         # the 7-layer map + structural chokepoints
@@ -83,6 +84,11 @@ def cmd_audit(args):
 def cmd_thesis(args):
     from serenity_chokepoint.thesis import thesis_report
     print(thesis_report(args.ticker))
+
+
+def cmd_proxy(args):
+    from serenity_chokepoint.proxy_score import text_report
+    print(text_report(args.ticker))
 
 
 def cmd_validate(args):
@@ -200,6 +206,9 @@ def build_parser() -> argparse.ArgumentParser:
 
     sp = sub.add_parser("thesis", help="one-page full thesis: moat × timing × risk")
     sp.add_argument("ticker"); sp.set_defaults(func=cmd_thesis)
+
+    sp = sub.add_parser("proxy", help="market-observable chokepoint estimate for ANY ticker (triage: worth researching?)")
+    sp.add_argument("ticker"); sp.set_defaults(func=cmd_proxy)
 
     sp = sub.add_parser("growth", help="Serenity growth/ramp-inflection analysis of a ticker (or --pool)")
     sp.add_argument("ticker", nargs="?", default=None)
