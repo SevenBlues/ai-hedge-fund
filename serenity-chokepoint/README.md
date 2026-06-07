@@ -1,0 +1,355 @@
+<div align="center">
+
+# 🪢 Serenity Chokepoint Engine
+
+### Don't buy the tuna. Buy the shiso leaf.
+
+**An auditable, open-source reproduction of the AI supply-chain "Chokepoint Theory" — the framework behind one of the most talked-about retail traders of the decade.**
+
+It reverse-engineers the AI-compute supply chain, hunts the physically irreplaceable bottlenecks the entire buildout *must* flow through, and builds a high-conviction stock pool that **maximises return under an as-certain-as-possible win rate.**
+
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![PyPI](https://img.shields.io/pypi/v/serenity-chokepoint.svg)](https://pypi.org/project/serenity-chokepoint/)
+[![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/)
+[![Tests](https://img.shields.io/badge/tests-23%20passing-brightgreen.svg)](tests/)
+[![PRs welcome](https://img.shields.io/badge/PRs-welcome-orange.svg)](#-come-prove-us-wrong)
+[![Not financial advice](https://img.shields.io/badge/⚠️-NOT%20financial%20advice-red.svg)](#%EF%B8%8F-read-this-first)
+
+```bash
+pip install serenity-chokepoint      # or: pipx install serenity-chokepoint
+serenity thesis AXTI                  # the full method: moat × timing × risk
+```
+
+[中文说明](README.zh.md) · [Reproduce / Replace data](REPRODUCE.md) · [How it works](#-how-it-works) · [Performance](#-does-it-actually-work) · [Critique it](#-come-prove-us-wrong)
+
+</div>
+
+---
+
+## ⚠️ Read this first
+
+> This is an **educational reproduction** of a *publicly described* investment framework, built for people to **study and tear apart**.
+>
+> - 🧪 The bundled data are **illustrative placeholder estimates**, hand-assembled to demonstrate the *method* — **not a live signal**. Replace them with verifiable data (see [REPRODUCE.md](REPRODUCE.md)) before trusting any number.
+> - 💸 **Nothing here is financial advice.** Small-cap, illiquid, highly volatile names. You can lose everything.
+> - 🙅 **Not affiliated with, endorsed by, or connected to Serenity (@aleabitoreddit)** in any way. This is an independent reproduction of ideas they shared publicly.
+> - 📈 The performance below comes from backtests with real, disclosed limitations (survivorship, a roaring AI bull market). We show you the unflattering parts on purpose.
+
+If that's fine with you — welcome. Let's hunt chokepoints.
+
+---
+
+## 🍣 The idea in 30 seconds
+
+In a piece of sushi, the tuna belly is the expensive part — but the **shiso leaf** is the one thing you cannot skip. The same is true of the AI boom.
+
+Everyone owns the "tuna": NVIDIA, TSMC, the hyperscalers. The **alpha hides in the "shiso leaf"** — the tiny, overlooked, near-monopoly suppliers buried 4–7 layers deep in the supply chain, whose failure would halt the *entire* buildout.
+
+> Just as ~20% of the world's oil must pass through the **Strait of Hormuz**, the photonics buildout must pass through a handful of indium-phosphide substrate, laser, and feedstock suppliers. Control the chokepoint, control the buildout.
+
+A **chokepoint** is a node that is, all at once:
+
+| 🔒 Concentrated | 🧱 Irreplaceable | ⏳ Qualification-gated | 🕵️ Undiscovered |
+|---|---|---|---|
+| Top 1–3 suppliers > 70% share | Material-science moat, no second source | 12–24 month design-in cycle | Small cap, low institutional ownership |
+
+When demand grows at 50–100% CAGR and the choke can't, the screw gets repriced violently. That repricing is what the strategy is built to catch — **early, and only when the win is structurally likely.**
+
+---
+
+## ⚙️ The strategy, as one loop
+
+```
+   DEEP RESEARCH                CERTAINTY GATE                 RETURN MAXIMISER
+ ┌────────────────┐         ┌──────────────────────┐       ┌────────────────────┐
+ │ map the AI      │         │ keep only names whose │       │ among survivors,    │
+ │ supply chain,   │  ────▶  │ win is structurally   │ ────▶ │ concentrate capital │
+ │ score every     │         │ certain:              │       │ by win × upside so  │
+ │ node's          │         │ • survives red-team   │       │ the pool MAXIMISES  │
+ │ chokepoint-ness │         │ • win prob ≥ 60%      │       │ return GIVEN the    │
+ │ + asymmetry     │         │ • chokepoint ≥ 60     │       │ win-rate holds      │
+ │                 │         │ • P(EV>0) ≥ 60%       │       │ → CORE / BUILD /    │
+ └────────────────┘         └──────────────────────┘       │   STARTER tiers     │
+                                                            └────────────────────┘
+```
+
+It is **not** a multi-factor trading system. It does one thing: deep research → a high-conviction pool → maximise return under a win-rate condition.
+
+---
+
+## 🚀 Quickstart
+
+```bash
+# install once, get a global `serenity` command (like any CLI tool)
+pipx install serenity-chokepoint        # or:  uvx serenity-chokepoint pool
+                                         # or:  pip install serenity-chokepoint
+
+serenity pool                            # 👈 the curated high-conviction pool
+serenity pool --live                     # tighten it with live Yahoo Finance data
+serenity thesis AXTI                     # 🎯 one-page full thesis: moat × timing × risk
+serenity proxy ALAB                      # 🔭 triage ANY ticker: is it worth researching?
+serenity growth AXTI                     # the ramp-inflection (timing) lens
+serenity scan                            # 🛰️ momentum ranking radar (NOT the method)
+serenity scan --tickers NVDA,AXTI,SIVE   # scan your own watchlist
+serenity validate AXTI                   # deep-dive one ticker (score + red-team)
+serenity supply-chain                    # the 7-layer map + structural chokepoints
+serenity backtest --oos                  # the honest out-of-sample test
+serenity audit                           # 🔬 ALL significance tests → evidence scorecard
+serenity --help
+```
+
+<details>
+<summary><b>📋 Sample <code>serenity pool</code> output</b> (click to expand)</summary>
+
+```
+SERENITY CHOKEPOINT — HIGH-CONVICTION STOCK POOL (deep research -> certainty gate -> max return)
+Certainty gate: survives red-team + win_prob>=60% + chokepoint>=60 + P(EV>0)>=60%
+Pool size: 8 names.   Objective: maximise return GIVEN the win-rate condition.
+
+── TIER 1: CORE (highest conviction) ───────────────────────────────────────────
+  SIVE   Sivers Semiconductors   L3 Laser / light source
+         weight 23.2% | win 68%  P(EV>0) 100% | upside 5.0x  exp.return +253% | choke 74 resil 0.69
+         thesis : CW laser light-source chokepoint for co-packaged optics; 2027-28 ramp; AVGO/MRVL buyout optionality.
+         catalyst: UNDISCOVERED, MOAT:LONG-QUAL, M&A-TARGET | top risk: dilution / cash burn before ramp
+  AXTI   AXT Inc.                L4 Substrate (InP/GaAs)
+         weight 17.4% | win 72%  P(EV>0) 100% | upside 3.8x  exp.return +191% | choke 83 resil 0.77
+         thesis : Western InP-substrate chokepoint ('Strait of Hormuz' of photonics); vertically integrated feedstock.
+         catalyst: CONCENTRATED(>70%), MOAT:LONG-QUAL | top risk: China gallium/indium export controls
+── TIER 2: BUILD ──  POET · AEHR · VNP
+── TIER 3: STARTER / watch ──  IQE · INPACT · SOI
+
+POOL BLEND: weighted win-prob 67%   weighted expected return +153% (per $1, on the modelled horizon)
+```
+
+</details>
+
+---
+
+## 🛰️ Radar vs. deep dive — two different tools
+
+| | `serenity scan` (radar) | `serenity pool` (deep dive) |
+|---|---|---|
+| **Universe** | broad (~60 names, or your `--tickers`) | a fixed, hand-researched watchlist |
+| **Signal** | live, price-only **ramp factor** (12-1 momentum + re-rating gap + small-cap tilt) | full structural Chokepoint Score + asymmetric odds + red-team |
+| **Changes?** | **yes — daily, with the market; surfaces NEW names** | stable; a high-conviction book shouldn't churn |
+| **Use it to** | *find* candidates worth researching | *commit* to the ones that survived research |
+
+So the workflow is: **`scan` to spot movement → `thesis`/`validate`/`growth` to do the real analysis → `pool` to size.** `serenity thesis <T>` is the one-page synthesis — it fuses the three lenses (structural **moat** × growth **timing** × red-team **risk**) into a single verdict (`🎯 PRIME SETUP`, `⏳ POSITIONED EARLY`, `⛔ FAILS VALIDATION`, …).
+
+> 🔭 **Bring your own ticker.** The structural moat is hand-researched, so it only exists for the curated names. For *anything else*, `serenity proxy <T>` gives an honest **triage**: it scores the one pillar that *is* mechanically screenable — **information asymmetry** (small + lightly-owned + thinly-covered = still undiscovered) — and lists the four structural pillars you'd have to research yourself (76% of the score). A $61B, 83%-institutional name comes back `🔴 ALREADY DISCOVERED`; a tiny, overlooked one comes back `✅ FITS THE PROFILE — worth the research`. It tells you where to *spend* your research time, and refuses to fake the rest.
+
+```
+ # TICKER   SCORE  MOM(12-1)  RAMP    MKT$B   note
+ 1 AXTI     100.0      ...x     🔥      6.7   curated
+ 6 ICHR      90.7      ...x     🔥      2.5   NEW find   ← radar surfaced it; go research it
+```
+
+## 📈 Growth analysis — the ramp-inflection lens (`serenity growth`)
+
+This is the analytical core applied to **growth**, and it is **not** a generic
+"high revenue growth = good" screen. Serenity's thesis monetises one specific
+moment — the **volume-ramp inflection**, when a qualified chokepoint supplier
+goes from sampling to mass production and the economics flip: revenue
+*accelerates*, **gross margin turns up**, and operating losses collapse. Bought
+before the Street re-rates it, that inflection is the asymmetric trade.
+
+```bash
+serenity growth AXTI       # one ticker, full ramp breakdown (live, free data)
+serenity growth --pool     # ramp-stage table across the curated chokepoint pool
+```
+
+```
+SERENITY GROWTH ANALYSIS — AXTI (ramp-inflection lens)
+  GROWTH SCORE : 72.1/100      stage: 🚀 EARLY RAMP (margin inflection)
+     revenue acceleration     0.50  ██████████
+     margin inflection        1.00  ████████████████████   ← gross margin +36pts, op margin +47pts
+     revenue growth (YoY)     0.78  ████████████████
+     reinvestment (R&D)       0.75  ███████████████
+     growth-adj. valuation    0.51  ██████████
+```
+
+The Growth Score weights, in order of Serenity-relevance: **acceleration (25)**,
+**margin inflection (25)**, revenue growth (22), reinvestment/R&D (13), and a
+venture-style **growth-adjusted valuation (15)** — not trailing P/S.
+
+> 🔑 **Two scores, one thesis.** The *chokepoint score* is the structural bet
+> (the moat); the *growth score* is the **timing** (has the ramp started?). A
+> pre-ramp chokepoint deliberately scores LOW on growth — that's the point: you
+> buy the moat *before* the ramp shows up in the numbers, and use `growth` to
+> watch the inflection arrive. **High chokepoint + turning-up growth = the
+> ideal Serenity setup.**
+
+## 🛰️ A momentum ranking, clearly labelled (`serenity scan`)
+
+`serenity scan` ranks a broad universe by vol-adjusted 3m/6m/12m momentum. It is
+a **convenience radar, explicitly NOT the method** — momentum only tells you
+what already moved. Use it to spot movement, then do the real work with
+`growth` + `validate`.
+
+## 🧠 How it works
+
+Every node in the supply chain gets two things: a **Chokepoint Score** (is it a real bottleneck?) and an **asymmetric-payoff** estimate (is it a high-odds bet?).
+
+### 1. Chokepoint Score (0–100) — six weighted pillars
+
+| Pillar | Weight | What it captures |
+|---|--:|---|
+| **Supply concentration** | 22 | Top-3 share; > 70% is the hard gate, then curves up non-linearly |
+| **Irreplaceability** | 22 | Material-science moat × qualification-cycle length |
+| **Demand/supply gap** | 16 | AI end-market CAGR running ahead of the node's capacity CAGR |
+| **Qualification barrier** | 16 | Already designed-in + long cert cycle = competitors years behind |
+| **Information asymmetry** | 14 | Small cap + low institutional ownership + thin coverage (the alpha) |
+| **Catalyst / optionality** | 10 | Insider buying, short interest, M&A premium, vertical integration |
+
+### 2. Asymmetric payoff
+The structural moat maps to a **win probability**; the ramp multiple (venture-style, not trailing P/S) maps to **upside**; dilution + valuation + tech-path + liquidity risk map to **downside**. Out come the **odds ratio**, **expected value**, and a deep-fractional-**Kelly** position size.
+
+### 3. The supply-chain graph & demand model
+A **NetworkX** dependency graph independently corroborates which nodes are chokepoints *topologically* (high betweenness / reverse-PageRank), and a simple compute-×-optical-intensity model sizes the demand-vs-capacity shortfall.
+
+<div align="center"><img src="assets/screen.png" width="92%" alt="Chokepoint screen: supply-chain graph, scores, odds-vs-conviction, demand vs capacity"/></div>
+
+---
+
+## 📊 Does it actually work?
+
+Here's where most strategy repos show you a hockey stick and hide the caveats. **We built an engine to attack our own picks, and we publish the unflattering findings.** Read all three.
+
+### 1️⃣ In-sample portfolio backtest (trailing 2y, real prices)
+
+| Book | Return | CAGR | Sharpe |
+|---|--:|--:|--:|
+| **Chokepoint survivors (Kelly)** | **+1506%** | **58%** | **1.77** |
+| Equal-weight universe | +1140% | 51% | 1.67 |
+| 🐟 NVDA (the "tuna") | +91% | 11% | 0.53 |
+| QQQ | +65% | 9% | 0.74 |
+
+### 2️⃣ Event study — does "qualification → ramp" actually re-rate?
+Using a **+12% single-day gap** as a proxy for a qualification/ramp event: the average **60-day forward return is +58.7% vs a +28.4% baseline → +30.3% edge** (227 events, 63% hit-rate). Re-rating events *continue*, they don't mean-revert. ✅
+
+<div align="center"><img src="assets/backtest.png" width="92%" alt="Backtest equity curves and event-study"/></div>
+
+### 3️⃣ The honest one: genuine out-of-sample walk-forward
+Broad fixed universe (winners **and** laggards), point-in-time price-only signal, train/test split, no look-ahead.
+
+| Window | Strategy CAGR | SOXX CAGR | Verdict |
+|---|--:|--:|---|
+| **In-sample** (2019–23) | 22.2% | 25.2% | 🔴 *slightly LAGS* — proof it wasn't curve-fit |
+| **Out-of-sample** (2023–26) | **143.9%** | 54.1% | 🟢 beats the **semiconductor sector itself** by +90 pts |
+
+> The train window **underperforming** is the point: the out-of-sample edge can't be from tuning on the test data. And the benchmark is **SOXX** — so this is *selection within semis beating owning all semis*, not just sector beta.
+
+<div align="center"><img src="assets/oos.png" width="92%" alt="Out-of-sample walk-forward equity curve"/></div>
+
+### 🔬 ...and we stress-test that, too
+
+<div align="center"><img src="assets/robustness.png" width="92%" alt="Per-regime excess and rolling-fold distribution"/></div>
+
+- **2022 bear:** the factor fell **−30.9% vs SOXX −35.1%** — a +4.2pt cushion, no momentum crash. 🟢
+- **Regime-dependent:** it *lagged* in the 2020/2021/2023 bull years; the edge is concentrated in **2024–26**, exactly the late volume-ramp phase the thesis is about. 🟡
+- **Rolling 24 folds:** beats SOXX in **62%** of windows — but median Sharpe **1.01 vs SOXX 1.27**: higher return, **higher volatility**, edge in the right tail. It's a high-**odds** book, not a low-risk one. 🟡
+
+**Bottom line:** the alpha looks real but **regime-dependent** and **volatile** — consistent with a concentrated, high-conviction, ride-the-ramp strategy. We'd rather you know that going in.
+
+### 4️⃣ The honest-est one: is the signal *statistically significant?* (mostly **no**)
+
+A backtest curve is the easiest thing to fake and the least informative thing to show. So we ran the signal through the tests most reproductions skip — **Information Coefficient, t-stats, p-values, a multiple-testing-corrected factor battery, and a momentum-controlled test of the score itself** — and rolled them into one command:
+
+```bash
+serenity audit          # → SCORECARD: OOS=PASS | Factor-significance=FAIL | Structural=WEAK
+```
+
+| Test | Result | Verdict |
+|---|---|--:|
+| OOS walk-forward vs SOXX | factor Sharpe +1.95 vs 1.40 | 🟢 PASS |
+| Factor IC significance | mean IC +0.014, **p = 0.54**; L/S Newey-West **p = 0.33** | 🔴 noise |
+| Factor battery (Bonferroni α=0.006) | **none survive**; `resid_mom` (ex-beta) strongest | 🟡 |
+| Chokepoint score vs returns | raw IC +0.44, but **vanishes once momentum is removed** | 🟡 |
+
+> **OVERALL EVIDENCE GRADE: WEAK / SUGGESTIVE.** The +143.9% OOS return is real, but it's **mostly momentum and sector beta** — an independent, *quantifiable* structural alpha is plausible but **not statistically demonstrated** on one sector, in one AI-bull epoch. A low grade is *not* proof the thesis is wrong: the score has no point-in-time history, so it can't be OOS-tested without fabricating data — and we won't.
+
+📄 **Full statistical writeup, every number, and how the stats are verified against SciPy: [VALIDATION.md](VALIDATION.md).**
+
+---
+
+## 🥷 We attack our own thesis (the part we're proudest of)
+
+The framework's own rule is: before you size up, hand the thesis to the harshest Devil's Advocate. So the engine ships with an **adversarial validator**:
+
+```bash
+serenity screen --live --adversarial
+```
+
+- **9 deterministic attack vectors** — valuation already priced-in, supply elasticity / second-source, CPO-vs-pluggables tech-path, "already discovered", dilution, microcap liquidity, customer concentration, geopolitics — each scored with a severity and a rebuttal.
+- **Monte-Carlo** on the payoff assumptions → P(EV > 0).
+- **Survival gate**: only names that survive the red-team make the pool.
+- **Optional multi-LLM red-team** hook (GPT / Claude / Gemini), off by default.
+
+On live data this correctly **kills** names the naive score would keep — e.g. a name trading at ~1677× EV/Sales, or one that's already 90%+ institutionally owned.
+
+---
+
+## 🧩 Architecture
+
+```
+serenity_chokepoint/
+├── chokepoint_data.py   # curated universe of supply-chain nodes + attributes
+├── scoring.py           # Chokepoint Score (0–100) + asymmetric-odds engine
+├── proxy_score.py       # market-observable triage for ANY ticker (1 screenable pillar)
+├── supply_chain.py      # NetworkX dependency graph + topological chokepoints
+├── demand_model.py      # AI-compute → optical-interconnect demand projection
+├── adversarial.py       # Step-3 red/blue team + Monte-Carlo (+ optional LLMs)
+├── live_data.py         # Yahoo Finance refresh of market-derived fields
+├── backtest.py          # in-sample portfolio + factor + event study
+├── oos_backtest.py      # out-of-sample walk-forward + regime/rolling robustness
+├── factor_validation.py # IC / t-stat / p-value + factor battery (Bonferroni)
+├── structural_validation.py # does the score beat momentum? (cross-section)
+├── audit.py             # `serenity audit`: all tests → one evidence scorecard
+├── pool.py              # THE PRODUCT: certainty-gated, return-maximising pool
+└── cli.py               # the `serenity` command
+```
+
+Runs **fully offline** with zero API keys; `--live` is the only thing that touches the network.
+
+---
+
+## 🔁 Reproduce & replace the data
+
+The bundled numbers are placeholders. [**REPRODUCE.md**](REPRODUCE.md) gives a per-field source table — which fields auto-refresh from market data and which need real research (top-3 share, qualification cycle, ramp multiple) — plus how to reproduce every chart and run the offline test suite:
+
+```bash
+pip install serenity-chokepoint[dev]
+pytest -q          # 23 network-free tests pinning the engine's invariants
+```
+
+---
+
+## 🤺 Come prove us wrong
+
+This project exists **to be critiqued.** The most valuable contributions:
+
+1. **Data** — overturn a node's chokepoint rating with real top-3 share / qualification facts.
+2. **Scoring** — argue a pillar weight or curve is wrong.
+3. **Odds model** — challenge the win-prob mapping, the up/down assumptions, the Kelly cap.
+4. **Backtest** — find residual look-ahead/survivorship, or contribute a cleaner universe that includes delisted names.
+5. **Attack vectors** — add a missing one (patent cliff, quantified customer concentration…).
+
+Open an issue or a PR. Run `pytest -q` first. Be ruthless — that's the whole point.
+
+---
+
+## 🙏 Acknowledgments
+
+- **Serenity (@aleabitoreddit)** — for sharing the Chokepoint Theory publicly. This is an independent reproduction; all errors are ours, not theirs.
+- **[virattt/ai-hedge-fund](https://github.com/virattt/ai-hedge-fund)** (MIT) — the project this engine was first prototyped inside.
+- The photonics / CPO research community (TrendForce, SemiAnalysis, Yole, and the public write-ups cited in [REPRODUCE.md](REPRODUCE.md)).
+
+## 📄 License
+
+MIT — see [LICENSE](LICENSE). Use it, fork it, break it. Just don't blame us for your trades.
+
+<div align="center">
+
+**⭐ If this made you think differently about the AI supply chain, star it — and then try to break it.**
+
+</div>
