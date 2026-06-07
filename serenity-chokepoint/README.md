@@ -20,7 +20,7 @@ pip install serenity-chokepoint      # or: pipx install serenity-chokepoint
 serenity thesis AXTI                  # the full method: moat × timing × risk
 ```
 
-[中文说明](README.zh.md) · [Reproduce / Replace data](REPRODUCE.md) · [How it works](#-how-it-works) · [Performance](#-does-it-actually-work) · [Critique it](#-come-prove-us-wrong)
+[中文说明](README.zh.md) · [Reproduce / Replace data](REPRODUCE.md) · [How it works](#-how-it-works) · [Performance](#-does-it-actually-work) · [Changelog](CHANGELOG.md) · [Critique it](#-come-prove-us-wrong)
 
 </div>
 
